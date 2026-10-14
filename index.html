@@ -797,29 +797,70 @@
 
                 <!-- PDF to Image -->
                 <div id="convert-panel-pdf-to-img" class="space-y-4">
-                    <div class="flex justify-between items-center text-xs text-slate-600">
-                        <p>Ubah setiap halaman PDF menjadi format gambar berkualitas tinggi.</p>
-                        <div class="flex items-center space-x-2">
-                            <span class="font-bold">Format:</span>
-                            <select id="convert-img-format" class="border border-slate-300 rounded px-2 py-1 text-xs">
-                                <option value="image/png">PNG (Jernih & Tajam)</option>
-                                <option value="image/jpeg">JPG (Ringan)</option>
-                            </select>
-                        </div>
-                    </div>
-
+                    <!-- Dropzone when no PDF loaded -->
                     <div id="convert-pdf-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-2" onclick="triggerGlobalFileUpload()">
                         <div class="w-12 h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center border border-pink-100">
                             <i data-lucide="file-up" class="w-6 h-6"></i>
                         </div>
                         <h4 class="text-sm font-bold text-slate-900">Pilih File PDF untuk Dikonversi ke Gambar</h4>
+                        <p class="text-xs text-slate-400">Klik untuk memilih file PDF atau tarik dan lepas ke sini</p>
                     </div>
 
-                    <div id="convert-pdf-action-box" class="hidden flex justify-end">
-                        <button onclick="executePdfToImages()" class="btn-tactile px-5 py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center space-x-2">
-                            <i data-lucide="archive" class="w-4 h-4"></i>
-                            <span>Unduh Semua Gambar (ZIP)</span>
-                        </button>
+                    <!-- Active PDF Panel with Visual Gallery -->
+                    <div id="convert-pdf-active-panel" class="hidden space-y-5">
+                        <!-- File info and Global Actions Bar -->
+                        <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-pink-100 text-pink-700 flex items-center justify-center">
+                                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 id="convert-pdf-file-name" class="text-xs font-bold text-slate-900 truncate max-w-xs sm:max-w-md">-</h4>
+                                    <p class="text-[11px] text-slate-500">
+                                        <span id="convert-pdf-file-pages">- Halaman</span> • 
+                                        <span id="convert-pdf-file-size">-</span>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3">
+                                <div class="flex items-center space-x-1.5 text-xs">
+                                    <span class="font-bold text-slate-600">Format:</span>
+                                    <select id="convert-img-format" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-white" onchange="renderPdfToImageGrid()">
+                                        <option value="image/png">PNG (Jernih & Tajam)</option>
+                                        <option value="image/jpeg">JPG (Ukuran Ringan)</option>
+                                    </select>
+                                </div>
+                                <button onclick="triggerGlobalFileUpload()" class="text-xs text-slate-600 hover:text-slate-900 font-semibold underline">Ganti File</button>
+                                <button onclick="executePdfToImages()" id="btn-download-all-images" class="btn-tactile px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center space-x-1.5">
+                                    <i data-lucide="archive" class="w-4 h-4"></i>
+                                    <span>Unduh Semua (.ZIP)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar during zip creation -->
+                        <div id="convert-progress-box" class="hidden space-y-2 p-4 rounded-xl bg-pink-50/70 border border-pink-200">
+                            <div class="flex justify-between items-center text-xs font-bold text-pink-900">
+                                <span id="convert-status-label" class="flex items-center space-x-2">
+                                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-pink-600"></i>
+                                    <span>Mengonversi halaman...</span>
+                                </span>
+                                <span id="convert-percent-label">0%</span>
+                            </div>
+                            <div class="w-full bg-pink-200/60 rounded-full h-2 overflow-hidden">
+                                <div id="convert-progress-bar" class="bg-pink-600 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Visual Grid of rendered pages -->
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Pratinjau Lembar Halaman (Unduh Satuan / Semua):</h5>
+                                <span id="convert-pages-count-badge" class="text-xs text-pink-600 font-semibold">- Lembar</span>
+                            </div>
+                            <div id="convert-pdf-pages-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -827,32 +868,39 @@
                 <div id="convert-panel-img-to-pdf" class="space-y-4 hidden">
                     <p class="text-xs text-slate-600">Susun kumpulan foto struk, kuitansi, atau berkas JPG/PNG menjadi satu file PDF rapi.</p>
                     
-                    <div class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-2" onclick="document.getElementById('img-to-pdf-input').click()">
+                    <div id="img-to-pdf-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-2" onclick="document.getElementById('img-to-pdf-input').click()">
                         <div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-100">
                             <i data-lucide="images" class="w-6 h-6"></i>
                         </div>
                         <h4 class="text-sm font-bold text-slate-900">Pilih Gambar (JPG/PNG) dari Komputer</h4>
+                        <p class="text-xs text-slate-400">Pilih beberapa foto sekaligus atau tarik ke area ini</p>
                         <input type="file" id="img-to-pdf-input" accept="image/png,image/jpeg,image/webp" multiple class="hidden" onchange="handleImagesSelected(event)">
                     </div>
 
                     <div id="img-to-pdf-preview-box" class="hidden space-y-4">
-                        <div class="flex items-center justify-between text-xs font-bold text-slate-700">
-                            <span>Gambar Terpilih:</span>
-                            <div class="flex items-center space-x-3">
-                                <span>Orientasi:</span>
-                                <select id="img-pdf-orientation" class="border border-slate-300 rounded px-2 py-1 text-xs">
-                                    <option value="portrait">Portrait (Tegak)</option>
-                                    <option value="landscape">Landscape (Mendatar)</option>
-                                </select>
+                        <div class="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-slate-700">Gambar Terpilih:</span>
+                                <span id="img-selected-count-badge" class="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 font-bold">0 Foto</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="font-semibold text-slate-600">Orientasi:</span>
+                                    <select id="img-pdf-orientation" class="border border-slate-300 rounded px-2 py-1 text-xs bg-white font-semibold">
+                                        <option value="portrait">Portrait (Tegak)</option>
+                                        <option value="landscape">Landscape (Mendatar)</option>
+                                    </select>
+                                </div>
+                                <button onclick="clearImgToPdfList()" class="text-rose-600 font-semibold hover:underline">Hapus Semua</button>
                             </div>
                         </div>
 
-                        <div id="img-thumbnails-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
+                        <div id="img-thumbnails-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
 
                         <div class="flex justify-end pt-2">
                             <button onclick="executeImagesToPdf()" class="btn-tactile px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center space-x-2">
                                 <i data-lucide="file-check" class="w-4 h-4"></i>
-                                <span>Buat Dokumen PDF</span>
+                                <span>Buat Dokumen PDF & Unduh</span>
                             </button>
                         </div>
                     </div>

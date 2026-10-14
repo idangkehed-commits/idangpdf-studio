@@ -113,6 +113,8 @@ function switchView(viewName) {
         setupCompressView();
     } else if (viewName === 'split' && state.pdfDoc) {
         setupSplitViewGrid();
+    } else if (viewName === 'convert' && state.pdfDoc) {
+        setupPdfToImageView();
     }
 
     initLucide();
@@ -152,13 +154,23 @@ function initDropzones() {
         dz.addEventListener('drop', async (e) => {
             e.preventDefault();
             dz.classList.remove('dragover');
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                const file = e.dataTransfer.files[0];
-                if (file.type === 'application/pdf') {
-                    await loadPdfFile(file);
-                } else if (file.type.startsWith('image/')) {
-                    handleDirectImageUpload(file);
+            const droppedFiles = Array.from(e.dataTransfer.files || []);
+            if (!droppedFiles.length) return;
+
+            // If user dropped on the Image-to-PDF dropzone or is on convert/img-to-pdf tab with images:
+            if (dz.id === 'img-to-pdf-dropzone' || (state.currentView === 'convert' && droppedFiles.some(f => f.type.startsWith('image/')))) {
+                const imgFiles = droppedFiles.filter(f => f.type.startsWith('image/'));
+                if (imgFiles.length > 0) {
+                    addImgToPdfFiles(imgFiles);
+                    return;
                 }
+            }
+
+            const firstFile = droppedFiles[0];
+            if (firstFile.type === 'application/pdf') {
+                await loadPdfFile(firstFile);
+            } else if (firstFile.type.startsWith('image/')) {
+                handleDirectImageUpload(firstFile);
             }
         });
     });
@@ -185,15 +197,18 @@ async function loadPdfFile(file) {
         document.getElementById('info-pages').innerText = `${state.totalPages} Halaman`;
         document.getElementById('info-filesize').innerText = formatFileSize(file.size);
 
-        // Setup Compress and Split views
+        // Setup Compress, Split, and Convert views
         setupCompressView();
         setupSplitViewGrid();
+        setupPdfToImageView();
 
-        // If currently on dashboard or compress, stay contextually, or switch to editor
+        // If currently on dashboard or compress or convert, stay contextually, or switch to editor
         if (state.currentView === 'dashboard') {
             switchView('editor');
         } else if (state.currentView === 'compress') {
             setupCompressView();
+        } else if (state.currentView === 'convert') {
+            setupPdfToImageView();
         }
 
         // Render thumbnails and active page
@@ -1217,24 +1232,146 @@ function setConvertTab(tab) {
     if (isPdfToImg) {
         btn1.className = 'pb-3 border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2';
         btn2.className = 'pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2';
+        if (state.pdfDoc) {
+            setupPdfToImageView();
+        }
     } else {
         btn2.className = 'pb-3 border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2';
         btn1.className = 'pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2';
     }
 }
 
+// Setup & Render PDF-to-Image View
+async function setupPdfToImageView() {
+    const dropzone = document.getElementById('convert-pdf-dropzone');
+    const activePanel = document.getElementById('convert-pdf-active-panel');
+
+    if (!state.pdfDoc || !state.currentFile) {
+        if (dropzone) dropzone.classList.remove('hidden');
+        if (activePanel) activePanel.classList.add('hidden');
+        return;
+    }
+
+    if (dropzone) dropzone.classList.add('hidden');
+    if (activePanel) activePanel.classList.remove('hidden');
+
+    document.getElementById('convert-pdf-file-name').innerText = state.currentFileName;
+    document.getElementById('convert-pdf-file-pages').innerText = `${state.totalPages} Halaman`;
+    document.getElementById('convert-pdf-file-size').innerText = formatFileSize(state.currentFile.size);
+    document.getElementById('convert-pages-count-badge').innerText = `${state.totalPages} Lembar Halaman`;
+
+    await renderPdfToImageGrid();
+}
+
+async function renderPdfToImageGrid() {
+    if (!state.pdfDoc) return;
+    const grid = document.getElementById('convert-pdf-pages-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const mimeType = document.getElementById('convert-img-format').value;
+    const ext = mimeType === 'image/jpeg' ? 'JPG' : 'PNG';
+
+    for (let i = 1; i <= state.totalPages; i++) {
+        const page = await state.pdfDoc.getPage(i);
+        const rotation = (state.pageRotations[i] || 0) % 360;
+        const viewport = page.getViewport({ scale: 0.25, rotation });
+
+        const card = document.createElement('div');
+        card.className = 'surface-card p-2.5 rounded-xl text-center space-y-2 border border-slate-200 transition hover:border-pink-300 hover:shadow-xs';
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.className = 'w-full h-auto rounded-lg shadow-2xs mx-auto block';
+
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        const infoRow = document.createElement('div');
+        infoRow.className = 'flex items-center justify-between text-[11px] pt-1';
+        infoRow.innerHTML = `
+            <span class="font-bold text-slate-800">Hal ${i}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">${ext}</span>
+        `;
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn-tactile w-full py-1.5 px-2 bg-pink-50 hover:bg-pink-100 text-pink-700 font-bold text-xs rounded-lg border border-pink-200 transition flex items-center justify-center space-x-1';
+        downloadBtn.innerHTML = `
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Unduh ${ext}</span>
+        `;
+        downloadBtn.onclick = () => downloadSinglePageImage(i);
+
+        card.appendChild(canvas);
+        card.appendChild(infoRow);
+        card.appendChild(downloadBtn);
+        grid.appendChild(card);
+    }
+    initLucide();
+}
+
+async function downloadSinglePageImage(pageNum) {
+    if (!state.pdfDoc) return;
+    try {
+        showToast(`Merender halaman ${pageNum}...`, 'info');
+        const page = await state.pdfDoc.getPage(pageNum);
+        const rotation = (state.pageRotations[pageNum] || 0) % 360;
+        const viewport = page.getViewport({ scale: 2.2, rotation }); // High quality render
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        const mimeType = document.getElementById('convert-img-format').value;
+        const ext = mimeType === 'image/jpeg' ? 'jpg' : 'png';
+        const dataUrl = canvas.toDataURL(mimeType, 0.94);
+
+        // Download directly
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `${state.currentFileName.replace(/\.pdf$/i, '')}_halaman_${pageNum}.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        showToast(`Halaman ${pageNum} berhasil diunduh (${ext.toUpperCase()})!`, 'success');
+    } catch (err) {
+        console.error('Download single page error:', err);
+        showToast('Gagal mengunduh gambar: ' + err.message, 'error');
+    }
+}
+
 async function executePdfToImages() {
     if (!state.pdfDoc) return showToast('Buka file PDF terlebih dahulu.', 'warning');
 
+    const progressBox = document.getElementById('convert-progress-box');
+    const statusLabel = document.getElementById('convert-status-label');
+    const percentLabel = document.getElementById('convert-percent-label');
+    const progressBar = document.getElementById('convert-progress-bar');
+    const btnAll = document.getElementById('btn-download-all-images');
+
+    progressBox.classList.remove('hidden');
+    if (btnAll) btnAll.disabled = true;
+
     try {
-        showToast('Mengonversi halaman PDF menjadi gambar...', 'info');
         const zip = new JSZip();
         const mimeType = document.getElementById('convert-img-format').value;
         const ext = mimeType === 'image/jpeg' ? 'jpg' : 'png';
 
         for (let i = 1; i <= state.totalPages; i++) {
+            const pct = Math.round((i / state.totalPages) * 100);
+            percentLabel.innerText = `${pct}%`;
+            progressBar.style.width = `${pct}%`;
+            statusLabel.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-pink-600"></i><span>Mengonversi halaman ${i} dari ${state.totalPages}...</span>`;
+            initLucide();
+
             const page = await state.pdfDoc.getPage(i);
-            const viewport = page.getViewport({ scale: 2.0 });
+            const rotation = (state.pageRotations[i] || 0) % 360;
+            const viewport = page.getViewport({ scale: 2.0, rotation });
             const canvas = document.createElement('canvas');
             canvas.width = viewport.width;
             canvas.height = viewport.height;
@@ -1247,37 +1384,56 @@ async function executePdfToImages() {
             zip.file(`halaman_${i}.${ext}`, base64Data, { base64: true });
         }
 
+        statusLabel.innerHTML = `<span>Menyusun file ZIP...</span>`;
         const zipBlob = await zip.generateAsync({ type: 'blob' });
-        downloadBlob(zipBlob, `gambar_pdf_${state.totalPages}_halaman.zip`);
-        showToast('Semua gambar berhasil di-download dalam format ZIP!', 'success');
+        downloadBlob(zipBlob, `gambar_${state.currentFileName.replace(/\.pdf$/i, '')}_semua_halaman.zip`);
+
+        progressBox.classList.add('hidden');
+        showToast('Semua gambar halaman berhasil di-download dalam format ZIP!', 'success');
     } catch (err) {
         console.error('PDF to Image error:', err);
+        progressBox.classList.add('hidden');
         showToast('Gagal konversi ke gambar: ' + err.message, 'error');
+    } finally {
+        if (btnAll) btnAll.disabled = false;
     }
 }
 
+// --------------------------------------------------------
+// IMAGE TO PDF FUNCTIONS
+// --------------------------------------------------------
 function handleImagesSelected(e) {
     const files = Array.from(e.target.files);
     if (!files.length) return;
+    addImgToPdfFiles(files);
+    e.target.value = '';
+}
 
+function addImgToPdfFiles(files) {
+    let loadedCount = 0;
     files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (event) => {
             state.imgToPdfFiles.push({
                 file,
                 name: file.name,
+                size: file.size,
                 dataUrl: event.target.result
             });
-            renderImagesToPdfThumbnails();
+            loadedCount++;
+            if (loadedCount === files.length) {
+                renderImagesToPdfThumbnails();
+                showToast(`${files.length} foto berhasil ditambahkan!`, 'success');
+            }
         };
         reader.readAsDataURL(file);
     });
-    e.target.value = '';
 }
 
 function renderImagesToPdfThumbnails() {
     const box = document.getElementById('img-to-pdf-preview-box');
     const container = document.getElementById('img-thumbnails-container');
+    const countBadge = document.getElementById('img-selected-count-badge');
     container.innerHTML = '';
 
     if (state.imgToPdfFiles.length === 0) {
@@ -1286,16 +1442,51 @@ function renderImagesToPdfThumbnails() {
     }
 
     box.classList.remove('hidden');
+    if (countBadge) countBadge.innerText = `${state.imgToPdfFiles.length} Foto`;
+
     state.imgToPdfFiles.forEach((item, index) => {
         const card = document.createElement('div');
-        card.className = 'border border-slate-200 rounded-lg p-2 bg-slate-50 text-center relative group';
+        card.className = 'surface-card p-2 rounded-xl text-center relative group border border-slate-200 bg-white space-y-1.5';
         card.innerHTML = `
-            <img src="${item.dataUrl}" class="w-full h-28 object-cover rounded mb-1">
-            <div class="text-[10px] font-bold text-slate-700 truncate">${escapeHtml(item.name)}</div>
-            <button onclick="removeImgToPdfFile(${index})" class="absolute top-1 right-1 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow" title="Hapus">✕</button>
+            <div class="relative overflow-hidden rounded-lg bg-slate-100 h-28 flex items-center justify-center">
+                <img src="${item.dataUrl}" class="max-h-full max-w-full object-contain">
+                <span class="absolute top-1 left-1 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">Hal ${index + 1}</span>
+            </div>
+            <div class="text-[10px] font-bold text-slate-800 truncate px-1">${escapeHtml(item.name)}</div>
+            <div class="text-[9px] text-slate-400">${formatFileSize(item.size)}</div>
+            <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                <div class="flex space-x-1">
+                    <button onclick="moveImgToPdfFile(${index}, -1)" ${index === 0 ? 'disabled class="opacity-20 p-1"' : 'class="p-1 hover:bg-slate-100 rounded text-slate-600"'} title="Geser ke Kiri">
+                        <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="moveImgToPdfFile(${index}, 1)" ${index === state.imgToPdfFiles.length - 1 ? 'disabled class="opacity-20 p-1"' : 'class="p-1 hover:bg-slate-100 rounded text-slate-600"'} title="Geser ke Kiri">
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+                <button onclick="removeImgToPdfFile(${index})" class="p-1 text-rose-500 hover:bg-rose-50 rounded" title="Hapus Foto">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
         `;
         container.appendChild(card);
     });
+    initLucide();
+}
+
+function moveImgToPdfFile(index, dir) {
+    const target = index + dir;
+    if (target >= 0 && target < state.imgToPdfFiles.length) {
+        const temp = state.imgToPdfFiles[index];
+        state.imgToPdfFiles[index] = state.imgToPdfFiles[target];
+        state.imgToPdfFiles[target] = temp;
+        renderImagesToPdfThumbnails();
+    }
+}
+
+function clearImgToPdfList() {
+    state.imgToPdfFiles = [];
+    renderImagesToPdfThumbnails();
+    showToast('Daftar gambar dikosongkan.', 'info');
 }
 
 function removeImgToPdfFile(index) {
