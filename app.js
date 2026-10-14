@@ -19,12 +19,18 @@ const state = {
     currentFile: null,
     currentFileName: 'dokumen.pdf',
     pdfDoc: null,
+    rawPdfBytes: null,
     totalPages: 0,
     currentPageIndex: 1,
     pageRotations: {}, // pageNum -> rotation angle (0, 90, 180, 270)
     
     // Annotations Map: pageNum -> Array of { id, type, x, y, width, height, content, color, size, rotation }
     annotations: {},
+    
+    // Compression State
+    selectedCompressLevel: 'recommended',
+    compressedBlob: null,
+    compressedFileName: '',
     
     // Merge Tool State
     mergeFiles: [], // Array of { file, name, pageCount, bytes }
@@ -83,19 +89,23 @@ function switchView(viewName) {
 
     // Update nav tab styles
     document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.classList.remove('active-tab', 'bg-white', 'text-brand-600', 'shadow-sm');
+        tab.classList.remove('active-tab', 'bg-white', 'text-slate-900', 'shadow-xs');
         tab.classList.add('text-slate-600');
     });
 
     const activeNav = document.getElementById(`nav-${viewName}`);
     if (activeNav) {
-        activeNav.classList.add('active-tab', 'bg-white', 'text-brand-600', 'shadow-sm');
+        activeNav.classList.add('active-tab', 'bg-white', 'text-slate-900', 'shadow-xs');
         activeNav.classList.remove('text-slate-600');
     }
 
-    // Re-render editor if moving to editor
+    // Prepare views if document is already loaded
     if (viewName === 'editor' && state.pdfDoc) {
         renderEditorPage(state.currentPageIndex);
+    } else if (viewName === 'compress' && state.pdfDoc) {
+        setupCompressView();
+    } else if (viewName === 'split' && state.pdfDoc) {
+        setupSplitViewGrid();
     }
 
     initLucide();
@@ -123,7 +133,7 @@ document.getElementById('global-pdf-input').addEventListener('change', async (e)
 });
 
 function initDropzones() {
-    const dropzones = document.querySelectorAll('.dropzone');
+    const dropzones = document.querySelectorAll('.dropzone-modern');
     dropzones.forEach(dz => {
         dz.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -168,15 +178,20 @@ async function loadPdfFile(file) {
         document.getElementById('info-pages').innerText = `${state.totalPages} Halaman`;
         document.getElementById('info-filesize').innerText = formatFileSize(file.size);
 
-        // Switch to editor view
-        switchView('editor');
+        // Setup Compress and Split views
+        setupCompressView();
+        setupSplitViewGrid();
 
-        // Render thumbnails and first page
+        // If currently on dashboard or compress, stay contextually, or switch to editor
+        if (state.currentView === 'dashboard') {
+            switchView('editor');
+        } else if (state.currentView === 'compress') {
+            setupCompressView();
+        }
+
+        // Render thumbnails and active page
         await renderAllThumbnails();
         await renderEditorPage(1);
-
-        // Also prepare Split View
-        setupSplitViewGrid();
 
         showToast(`Dokumen "${file.name}" berhasil dibuka!`, 'success');
     } catch (err) {
@@ -186,7 +201,6 @@ async function loadPdfFile(file) {
 }
 
 function handleDirectImageUpload(file) {
-    // If user uploaded an image directly, switch to OCR view and prepare it
     const reader = new FileReader();
     reader.onload = (e) => {
         const img = new Image();
@@ -207,14 +221,140 @@ function handleDirectImageUpload(file) {
 }
 
 // ========================================================
+// COMPRESS PDF ENGINE (FITUR BARU)
+// ========================================================
+function selectCompressLevel(level) {
+    state.selectedCompressLevel = level;
+    document.querySelectorAll('.compress-card').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById(`compress-lvl-${level}`);
+    if (target) target.classList.add('active');
+}
+
+function setupCompressView() {
+    if (!state.currentFile || !state.pdfDoc) return;
+    document.getElementById('compress-dropzone').classList.add('hidden');
+    document.getElementById('compress-active-panel').classList.remove('hidden');
+
+    document.getElementById('compress-file-name').innerText = state.currentFileName;
+    document.getElementById('compress-file-orig-size').innerText = formatFileSize(state.currentFile.size);
+    document.getElementById('compress-file-pages').innerText = `${state.totalPages} Halaman`;
+
+    // Reset results box
+    document.getElementById('compress-result-box').classList.add('hidden');
+    document.getElementById('compress-progress-box').classList.add('hidden');
+}
+
+async function startPdfCompression() {
+    if (!state.pdfDoc || !state.rawPdfBytes) {
+        showToast('Buka file PDF terlebih dahulu.', 'warning');
+        return;
+    }
+
+    const progressBox = document.getElementById('compress-progress-box');
+    const statusLabel = document.getElementById('compress-status-label');
+    const percentLabel = document.getElementById('compress-percent-label');
+    const progressBar = document.getElementById('compress-progress-bar');
+    const resultBox = document.getElementById('compress-result-box');
+    const runBtn = document.getElementById('btn-run-compress');
+
+    progressBox.classList.remove('hidden');
+    resultBox.classList.add('hidden');
+    runBtn.disabled = true;
+    runBtn.classList.add('opacity-50');
+
+    // Configure compression parameters based on selected level
+    let scale = 1.4;
+    let quality = 0.65;
+    if (state.selectedCompressLevel === 'extreme') {
+        scale = 1.0;
+        quality = 0.45;
+    } else if (state.selectedCompressLevel === 'light') {
+        scale = 1.8;
+        quality = 0.82;
+    }
+
+    try {
+        const compressedPdf = await PDFLib.PDFDocument.create();
+
+        for (let i = 1; i <= state.totalPages; i++) {
+            const pct = Math.round((i / state.totalPages) * 100);
+            percentLabel.innerText = `${pct}%`;
+            progressBar.style.width = `${pct}%`;
+            statusLabel.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-violet-600"></i><span>Mengompres halaman ${i} dari ${state.totalPages}...</span>`;
+            initLucide();
+
+            const page = await state.pdfDoc.getPage(i);
+            const rotation = (state.pageRotations[i] || 0) % 360;
+            const viewport = page.getViewport({ scale: scale, rotation: rotation });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+            // Compress to JPEG format with specified quality
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const embeddedImg = await compressedPdf.embedJpg(dataUrl);
+
+            // Add page preserving unscaled aspect ratio
+            const unscaledViewport = page.getViewport({ scale: 1.0, rotation: rotation });
+            const newPage = compressedPdf.addPage([unscaledViewport.width, unscaledViewport.height]);
+
+            newPage.drawImage(embeddedImg, {
+                x: 0,
+                y: 0,
+                width: unscaledViewport.width,
+                height: unscaledViewport.height
+            });
+        }
+
+        const compressedBytes = await compressedPdf.save({ useObjectStreams: true });
+        state.compressedBlob = new Blob([compressedBytes], { type: 'application/pdf' });
+        state.compressedFileName = `compressed_${state.currentFileName}`;
+
+        // Compute saved stats
+        const origSize = state.currentFile.size;
+        const newSize = state.compressedBlob.size;
+        const savedBytes = Math.max(0, origSize - newSize);
+        const savedPercent = Math.max(0, Math.round((savedBytes / origSize) * 100));
+
+        progressBox.classList.add('hidden');
+        resultBox.classList.remove('hidden');
+
+        document.getElementById('res-orig-size').innerText = formatFileSize(origSize);
+        document.getElementById('res-new-size').innerText = formatFileSize(newSize);
+        document.getElementById('res-saved-percent').innerText = `${savedPercent}%`;
+
+        showToast(`Kompresi berhasil! Ukuran terhemat ${savedPercent}%.`, 'success');
+    } catch (err) {
+        console.error('Compression error:', err);
+        progressBox.classList.add('hidden');
+        showToast('Gagal mengompres PDF: ' + err.message, 'error');
+    } finally {
+        runBtn.disabled = false;
+        runBtn.classList.remove('opacity-50');
+    }
+}
+
+function downloadCompressedPdf() {
+    if (!state.compressedBlob) {
+        showToast('Belum ada hasil kompresi.', 'warning');
+        return;
+    }
+    downloadBlob(state.compressedBlob, state.compressedFileName);
+    showToast('File PDF hasil kompresi berhasil diunduh!', 'success');
+}
+
+// ========================================================
 // STUDIO EDITOR & ANNOTATION LOGIC
 // ========================================================
 async function renderEditorPage(pageNum) {
     if (!state.pdfDoc) return;
     state.currentPageIndex = pageNum;
 
-    // Update page indicator
-    document.getElementById('editor-page-indicator').innerText = `Halaman ${pageNum} / ${state.totalPages}`;
+    document.getElementById('editor-page-indicator').innerText = `${pageNum} / ${state.totalPages}`;
 
     const emptyState = document.getElementById('editor-empty-state');
     const viewport = document.getElementById('editor-viewport');
@@ -224,7 +364,6 @@ async function renderEditorPage(pageNum) {
     const page = await state.pdfDoc.getPage(pageNum);
     const rotation = (state.pageRotations[pageNum] || 0) % 360;
 
-    // Desired display width inside workspace
     const scrollContainer = document.getElementById('editor-canvas-scroll');
     const maxWidth = Math.min(scrollContainer.clientWidth - 48, 850);
     const unscaledViewport = page.getViewport({ scale: 1.0, rotation });
@@ -234,7 +373,6 @@ async function renderEditorPage(pageNum) {
     const canvas = document.getElementById('editor-canvas');
     const context = canvas.getContext('2d');
 
-    // Handle High-DPI screens
     const outputScale = window.devicePixelRatio || 1;
     canvas.width = Math.floor(scaledViewport.width * outputScale);
     canvas.height = Math.floor(scaledViewport.height * outputScale);
@@ -251,17 +389,15 @@ async function renderEditorPage(pageNum) {
 
     await page.render(renderContext).promise;
 
-    // Update annotation layer dimensions
     const annotLayer = document.getElementById('editor-annotation-layer');
     annotLayer.style.width = canvas.style.width;
     annotLayer.style.height = canvas.style.height;
 
-    // Render active annotations for this page
     renderPageAnnotations(pageNum);
 
-    // Update active thumbnail highlight
     document.querySelectorAll('.thumbnail-item').forEach(el => {
-        el.classList.toggle('active', parseInt(el.dataset.page) === pageNum);
+        el.classList.toggle('ring-2', parseInt(el.dataset.page) === pageNum);
+        el.classList.toggle('ring-indigo-600', parseInt(el.dataset.page) === pageNum);
     });
 }
 
@@ -271,10 +407,10 @@ async function renderAllThumbnails() {
 
     for (let i = 1; i <= state.totalPages; i++) {
         const page = await state.pdfDoc.getPage(i);
-        const viewport = page.getViewport({ scale: 0.2 });
+        const viewport = page.getViewport({ scale: 0.18 });
 
         const item = document.createElement('div');
-        item.className = `thumbnail-item p-1.5 border rounded-lg text-center ${i === state.currentPageIndex ? 'active' : ''}`;
+        item.className = `thumbnail-item p-1 border border-slate-200 rounded-lg text-center cursor-pointer bg-white transition hover:border-slate-400 ${i === state.currentPageIndex ? 'ring-2 ring-indigo-600' : ''}`;
         item.dataset.page = i;
         item.onclick = () => renderEditorPage(i);
 
@@ -316,7 +452,7 @@ function rotateCurrentEditorPage() {
 }
 
 // ========================================================
-// INTERACTIVE ANNOTATION SYSTEM (DRAG & DROP ON CANVAS)
+// ANNOTATION INTERACTIVE DRAG & DROP
 // ========================================================
 function renderPageAnnotations(pageNum) {
     const layer = document.getElementById('editor-annotation-layer');
@@ -330,7 +466,6 @@ function renderPageAnnotations(pageNum) {
         el.style.left = item.x + 'px';
         el.style.top = item.y + 'px';
 
-        // Render appropriate content based on type
         if (item.type === 'text') {
             el.innerHTML = `<span style="color: ${item.color}; font-size: ${item.size}px; font-weight: 600;">${escapeHtml(item.content)}</span>`;
         } else if (item.type === 'signature') {
@@ -338,23 +473,20 @@ function renderPageAnnotations(pageNum) {
         } else if (item.type === 'stamp') {
             el.innerHTML = `<span class="stamp-badge ${item.className}">${item.content}</span>`;
         } else if (item.type === 'redact') {
-            el.innerHTML = `<div class="redact-box" style="width: ${item.width || 120}px; height: ${item.height || 36}px;"></div>`;
+            el.innerHTML = `<div class="redact-box" style="width: ${item.width || 130}px; height: ${item.height || 36}px;"></div>`;
         }
 
-        // Delete button
         const delBtn = document.createElement('div');
         delBtn.className = 'annotation-delete-btn';
         delBtn.innerHTML = '✕';
-        delBtn.title = 'Hapus item ini';
+        delBtn.title = 'Hapus item';
         delBtn.onclick = (e) => {
             e.stopPropagation();
             removeAnnotation(pageNum, item.id);
         };
         el.appendChild(delBtn);
 
-        // Make item draggable
         makeDraggable(el, item, pageNum);
-
         layer.appendChild(el);
     });
 }
@@ -383,11 +515,8 @@ function makeDraggable(element, item, pageNum) {
         const currentX = e.clientX || (e.touches && e.touches[0].clientX);
         const currentY = e.clientY || (e.touches && e.touches[0].clientY);
 
-        const deltaX = currentX - startX;
-        const deltaY = currentY - startY;
-
-        item.x = Math.max(0, initialX + deltaX);
-        item.y = Math.max(0, initialY + deltaY);
+        item.x = Math.max(0, initialX + (currentX - startX));
+        item.y = Math.max(0, initialY + (currentY - startY));
 
         element.style.left = item.x + 'px';
         element.style.top = item.y + 'px';
@@ -427,10 +556,7 @@ function removeAnnotation(pageNum, id) {
 
 // Text Modal
 function openAddTextModal() {
-    if (!state.pdfDoc) {
-        showToast('Buka dokumen PDF terlebih dahulu', 'warning');
-        return;
-    }
+    if (!state.pdfDoc) return showToast('Buka dokumen PDF terlebih dahulu', 'warning');
     document.getElementById('modal-text').classList.remove('hidden');
     document.getElementById('modal-text-content').focus();
 }
@@ -441,10 +567,7 @@ function closeAddTextModal() {
 
 function applyTextToDocument() {
     const text = document.getElementById('modal-text-content').value.trim();
-    if (!text) {
-        showToast('Teks tidak boleh kosong', 'warning');
-        return;
-    }
+    if (!text) return showToast('Teks tidak boleh kosong', 'warning');
     const size = parseInt(document.getElementById('modal-text-size').value) || 16;
     const color = document.getElementById('modal-text-color').value || '#000000';
 
@@ -462,10 +585,7 @@ function applyTextToDocument() {
 
 // Stamp Modal
 function openStampModal() {
-    if (!state.pdfDoc) {
-        showToast('Buka dokumen PDF terlebih dahulu', 'warning');
-        return;
-    }
+    if (!state.pdfDoc) return showToast('Buka dokumen PDF terlebih dahulu', 'warning');
     document.getElementById('modal-stamp').classList.remove('hidden');
 }
 
@@ -500,10 +620,7 @@ function applyStampPreset(presetName) {
 
 // Redact / Sensor Box
 function addRedactBox() {
-    if (!state.pdfDoc) {
-        showToast('Buka dokumen PDF terlebih dahulu', 'warning');
-        return;
-    }
+    if (!state.pdfDoc) return showToast('Buka dokumen PDF terlebih dahulu', 'warning');
     addAnnotationToPage(state.currentPageIndex, {
         type: 'redact',
         width: 140,
@@ -512,16 +629,9 @@ function addRedactBox() {
     showToast('Kotak sensor (redact) ditambahkan. Geser ke area sensitif.', 'info');
 }
 
-function openRedactGuide() {
-    showToast('Mode Sensor (Redact): Buka dokumen di Editor, klik tombol "Sensor (Redact)" lalu tempatkan kotak hitam di nomor KTP/rekening.', 'info');
-}
-
-// Signature Modal & Pad
+// Signature Modal
 function openSignatureModal() {
-    if (!state.pdfDoc) {
-        showToast('Buka dokumen PDF terlebih dahulu', 'warning');
-        return;
-    }
+    if (!state.pdfDoc) return showToast('Buka dokumen PDF terlebih dahulu', 'warning');
     document.getElementById('modal-signature').classList.remove('hidden');
     clearSignatureCanvas();
 }
@@ -601,16 +711,13 @@ function applySignatureToDocument() {
 }
 
 // ========================================================
-// SAVE & EXPORT EDITED PDF (VIA PDF-LIB)
+// EXPORT EDITED PDF
 // ========================================================
 async function exportEditedPdf() {
-    if (!state.rawPdfBytes) {
-        showToast('Tidak ada dokumen untuk disimpan.', 'warning');
-        return;
-    }
+    if (!state.rawPdfBytes) return showToast('Tidak ada dokumen untuk disimpan.', 'warning');
 
     try {
-        showToast('Menyusun PDF akhir dengan semua editan...', 'info');
+        showToast('Menyusun PDF dengan semua perubahan...', 'info');
 
         const pdfDoc = await PDFLib.PDFDocument.load(state.rawPdfBytes);
         const pages = pdfDoc.getPages();
@@ -625,19 +732,16 @@ async function exportEditedPdf() {
             const page = pages[i];
             const { width, height } = page.getSize();
 
-            // Apply rotation if any
             if (state.pageRotations[pageNum]) {
                 const currentRotation = page.getRotation().angle || 0;
                 page.setRotation(PDFLib.degrees((currentRotation + state.pageRotations[pageNum]) % 360));
             }
 
-            // Scale ratios from display canvas to PDF points
             const scaleX = width / canvasWidth;
             const scaleY = height / canvasHeight;
 
             const annots = state.annotations[pageNum] || [];
             for (const item of annots) {
-                // PDF coordinates start from bottom-left
                 const pdfX = item.x * scaleX;
                 const pdfY = height - (item.y * scaleY) - (item.size || 20);
 
@@ -697,13 +801,10 @@ async function exportEditedPdf() {
 }
 
 // ========================================================
-// AI OCR SCANNER (TESSERACT.JS WASM ENGINE)
+// AI OCR SCANNER (TESSERACT.JS WASM)
 // ========================================================
 async function runOcrCurrentPage() {
-    if (!state.pdfDoc) {
-        showToast('Buka dokumen terlebih dahulu', 'warning');
-        return;
-    }
+    if (!state.pdfDoc) return showToast('Buka dokumen terlebih dahulu', 'warning');
 
     const canvas = document.getElementById('editor-canvas');
     const lang = document.getElementById('ocr-lang-select').value || 'ind';
@@ -755,11 +856,9 @@ async function startBatchOcr() {
     const canvas = document.getElementById('editor-canvas');
     const sourceCanvas = document.getElementById('ocr-source-canvas');
 
-    // Use sourceCanvas if present, otherwise copy from editor canvas
     let targetCanvas = sourceCanvas.width > 0 ? sourceCanvas : canvas;
     if (!targetCanvas || targetCanvas.width === 0) {
-        showToast('Buka dokumen atau foto yang ingin di-OCR terlebih dahulu.', 'warning');
-        return;
+        return showToast('Buka dokumen atau foto yang ingin di-OCR terlebih dahulu.', 'warning');
     }
 
     const lang = document.getElementById('ocr-lang-select').value || 'ind';
@@ -796,7 +895,6 @@ async function startBatchOcr() {
         document.getElementById('ocr-full-text-result').value = fullText;
         state.activeOcrResult = fullText;
 
-        // Render Bounding Boxes on overlay
         const words = result.data.words || [];
         countLabel.innerText = `${words.length} Kata Terdeteksi`;
 
@@ -826,7 +924,7 @@ function copyEditorOcrText() {
     const text = document.getElementById('editor-ocr-text-result').value;
     if (!text) return showToast('Belum ada teks OCR.', 'warning');
     navigator.clipboard.writeText(text);
-    showToast('Teks berhasil disalin ke clipboard!', 'success');
+    showToast('Teks berhasil disalin!', 'success');
 }
 
 function downloadEditorOcrTxt() {
@@ -846,7 +944,6 @@ function downloadOcrDocx() {
     const text = document.getElementById('ocr-full-text-result').value;
     if (!text) return showToast('Belum ada teks OCR.', 'warning');
     
-    // Create simple clean HTML formatted for MS Word
     const htmlContent = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head><meta charset='utf-8'><title>Hasil Ekstraksi OCR</title></head>
@@ -944,10 +1041,7 @@ function clearMergeList() {
 }
 
 async function executePdfMerge() {
-    if (state.mergeFiles.length < 2) {
-        showToast('Pilih minimal 2 file PDF untuk digabungkan.', 'warning');
-        return;
-    }
+    if (state.mergeFiles.length < 2) return showToast('Pilih minimal 2 file PDF untuk digabungkan.', 'warning');
 
     try {
         showToast('Menggabungkan seluruh dokumen PDF...', 'info');
@@ -981,13 +1075,13 @@ async function setupSplitViewGrid() {
     state.splitSelectedPages.clear();
 
     for (let i = 1; i <= state.totalPages; i++) {
-        state.splitSelectedPages.add(i); // Default select all
+        state.splitSelectedPages.add(i);
 
         const page = await state.pdfDoc.getPage(i);
         const viewport = page.getViewport({ scale: 0.18 });
 
         const card = document.createElement('div');
-        card.className = 'border-2 border-purple-500 bg-purple-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
+        card.className = 'border-2 border-amber-500 bg-amber-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
         card.id = `split-card-${i}`;
         card.onclick = () => toggleSplitPage(i);
 
@@ -1000,7 +1094,7 @@ async function setupSplitViewGrid() {
         const check = document.createElement('input');
         check.type = 'checkbox';
         check.checked = true;
-        check.className = 'absolute top-2 right-2 rounded text-purple-600 w-4 h-4 pointer-events-none';
+        check.className = 'absolute top-2 right-2 rounded text-amber-600 w-4 h-4 pointer-events-none';
         check.id = `split-chk-${i}`;
 
         const lbl = document.createElement('div');
@@ -1024,7 +1118,7 @@ function toggleSplitPage(pageNum) {
     } else {
         state.splitSelectedPages.add(pageNum);
         chk.checked = true;
-        card.className = 'border-2 border-purple-500 bg-purple-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
+        card.className = 'border-2 border-amber-500 bg-amber-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
     }
 }
 
@@ -1035,7 +1129,7 @@ function selectAllSplitPages(select) {
         if (select) {
             state.splitSelectedPages.add(i);
             if (chk) chk.checked = true;
-            if (card) card.className = 'border-2 border-purple-500 bg-purple-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
+            if (card) card.className = 'border-2 border-amber-500 bg-amber-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
         } else {
             state.splitSelectedPages.delete(i);
             if (chk) chk.checked = false;
@@ -1060,7 +1154,7 @@ function applySplitRange() {
                     const chk = document.getElementById(`split-chk-${i}`);
                     const card = document.getElementById(`split-card-${i}`);
                     if (chk) chk.checked = true;
-                    if (card) card.className = 'border-2 border-purple-500 bg-purple-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
+                    if (card) card.className = 'border-2 border-amber-500 bg-amber-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
                 }
             }
         } else {
@@ -1070,7 +1164,7 @@ function applySplitRange() {
                 const chk = document.getElementById(`split-chk-${page}`);
                 const card = document.getElementById(`split-card-${page}`);
                 if (chk) chk.checked = true;
-                if (card) card.className = 'border-2 border-purple-500 bg-purple-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
+                if (card) card.className = 'border-2 border-amber-500 bg-amber-50/20 p-2 rounded-xl text-center cursor-pointer transition relative group';
             }
         }
     });
@@ -1078,17 +1172,13 @@ function applySplitRange() {
 }
 
 async function executePdfSplit() {
-    if (state.splitSelectedPages.size === 0) {
-        showToast('Pilih minimal 1 halaman untuk diekstrak.', 'warning');
-        return;
-    }
+    if (state.splitSelectedPages.size === 0) return showToast('Pilih minimal 1 halaman untuk diekstrak.', 'warning');
 
     try {
         showToast('Mengekstrak halaman terpilih...', 'info');
         const srcDoc = await PDFLib.PDFDocument.load(state.rawPdfBytes);
         const newDoc = await PDFLib.PDFDocument.create();
 
-        // Sort selected pages
         const sortedIndices = Array.from(state.splitSelectedPages).sort((a, b) => a - b).map(p => p - 1);
         const copiedPages = await newDoc.copyPages(srcDoc, sortedIndices);
         copiedPages.forEach(p => newDoc.addPage(p));
@@ -1114,19 +1204,16 @@ function setConvertTab(tab) {
     const btn2 = document.getElementById('subtab-img-to-pdf');
 
     if (isPdfToImg) {
-        btn1.className = 'pb-3 border-b-2 border-brand-600 text-brand-600 flex items-center space-x-2';
+        btn1.className = 'pb-3 border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2';
         btn2.className = 'pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2';
     } else {
-        btn2.className = 'pb-3 border-b-2 border-brand-600 text-brand-600 flex items-center space-x-2';
+        btn2.className = 'pb-3 border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2';
         btn1.className = 'pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2';
     }
 }
 
 async function executePdfToImages() {
-    if (!state.pdfDoc) {
-        showToast('Buka file PDF terlebih dahulu.', 'warning');
-        return;
-    }
+    if (!state.pdfDoc) return showToast('Buka file PDF terlebih dahulu.', 'warning');
 
     try {
         showToast('Mengonversi halaman PDF menjadi gambar...', 'info');
@@ -1136,7 +1223,7 @@ async function executePdfToImages() {
 
         for (let i = 1; i <= state.totalPages; i++) {
             const page = await state.pdfDoc.getPage(i);
-            const viewport = page.getViewport({ scale: 2.0 }); // High quality 2x scale
+            const viewport = page.getViewport({ scale: 2.0 });
             const canvas = document.createElement('canvas');
             canvas.width = viewport.width;
             canvas.height = viewport.height;
@@ -1206,17 +1293,13 @@ function removeImgToPdfFile(index) {
 }
 
 async function executeImagesToPdf() {
-    if (state.imgToPdfFiles.length === 0) {
-        showToast('Pilih minimal 1 gambar.', 'warning');
-        return;
-    }
+    if (state.imgToPdfFiles.length === 0) return showToast('Pilih minimal 1 gambar.', 'warning');
 
     try {
         showToast('Menyusun PDF dari foto...', 'info');
         const pdfDoc = await PDFLib.PDFDocument.create();
         const orientation = document.getElementById('img-pdf-orientation').value;
 
-        // Standard A4 dimensions in points: 595.28 x 841.89
         const pageWidth = orientation === 'landscape' ? 841.89 : 595.28;
         const pageHeight = orientation === 'landscape' ? 595.28 : 841.89;
 
@@ -1230,8 +1313,7 @@ async function executeImagesToPdf() {
 
             const page = pdfDoc.addPage([pageWidth, pageHeight]);
 
-            // Calculate scaled image size preserving aspect ratio with margin
-            const margin = 36; // 0.5 inch margin
+            const margin = 36;
             const maxW = pageWidth - (margin * 2);
             const maxH = pageHeight - (margin * 2);
 
@@ -1239,7 +1321,6 @@ async function executeImagesToPdf() {
             const imgW = embeddedImage.width * scale;
             const imgH = embeddedImage.height * scale;
 
-            // Center image on page
             const x = (pageWidth - imgW) / 2;
             const y = (pageHeight - imgH) / 2;
 
@@ -1284,10 +1365,7 @@ function initWatermarkLivePreview() {
 }
 
 async function executeApplyWatermark() {
-    if (!state.rawPdfBytes) {
-        showToast('Buka file PDF terlebih dahulu.', 'warning');
-        return;
-    }
+    if (!state.rawPdfBytes) return showToast('Buka file PDF terlebih dahulu.', 'warning');
 
     try {
         showToast('Menerapkan watermark ke seluruh halaman...', 'info');
@@ -1306,7 +1384,6 @@ async function executeApplyWatermark() {
         pages.forEach((page, idx) => {
             const { width, height } = page.getSize();
 
-            // Draw diagonal watermark in center
             const textWidth = font.widthOfTextAtSize(wmText, wmSize);
             page.drawText(wmText, {
                 x: (width - textWidth) / 2,
@@ -1318,7 +1395,6 @@ async function executeApplyWatermark() {
                 rotate: PDFLib.degrees(angle)
             });
 
-            // Draw dynamic page numbers if requested
             if (includePageNum) {
                 const pageNumText = `Halaman ${idx + 1} dari ${pages.length}`;
                 const numWidth = font.widthOfTextAtSize(pageNumText, 10);
@@ -1388,7 +1464,7 @@ function showToast(message, type = 'info') {
     if (!container) return;
 
     const toast = document.createElement('div');
-    toast.className = 'toast-msg glass px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold flex items-center space-x-2.5';
+    toast.className = 'toast-msg glass-panel px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold flex items-center space-x-2.5';
 
     let icon = 'info';
     let iconClass = 'text-blue-600';
@@ -1411,7 +1487,7 @@ function showToast(message, type = 'info') {
     toast.classList.add(borderColor);
     toast.innerHTML = `
         <i data-lucide="${icon}" class="w-4 h-4 ${iconClass}"></i>
-        <span class="text-slate-800">${escapeHtml(message)}</span>
+        <span class="text-slate-900">${escapeHtml(message)}</span>
     `;
 
     container.appendChild(toast);
