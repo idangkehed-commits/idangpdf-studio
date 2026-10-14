@@ -10,6 +10,13 @@ if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
+// Safe PDFLib accessor with clear error message
+function getPDFLib() {
+    if (window.PDFLib) return window.PDFLib;
+    if (typeof PDFLib !== 'undefined') return PDFLib;
+    throw new Error('Pustaka PDFLib sedang dimuat. Harap periksa koneksi internet atau muat ulang halaman (F5).');
+}
+
 // Global Application State
 const state = {
     currentView: 'dashboard',
@@ -274,6 +281,7 @@ async function startPdfCompression() {
     }
 
     try {
+        const PDFLib = getPDFLib();
         const compressedPdf = await PDFLib.PDFDocument.create();
 
         for (let i = 1; i <= state.totalPages; i++) {
@@ -717,6 +725,7 @@ async function exportEditedPdf() {
     if (!state.rawPdfBytes) return showToast('Tidak ada dokumen untuk disimpan.', 'warning');
 
     try {
+        const PDFLib = getPDFLib();
         showToast('Menyusun PDF dengan semua perubahan...', 'info');
 
         const pdfDoc = await PDFLib.PDFDocument.load(state.rawPdfBytes);
@@ -1044,6 +1053,7 @@ async function executePdfMerge() {
     if (state.mergeFiles.length < 2) return showToast('Pilih minimal 2 file PDF untuk digabungkan.', 'warning');
 
     try {
+        const PDFLib = getPDFLib();
         showToast('Menggabungkan seluruh dokumen PDF...', 'info');
         const mergedDoc = await PDFLib.PDFDocument.create();
 
@@ -1175,6 +1185,7 @@ async function executePdfSplit() {
     if (state.splitSelectedPages.size === 0) return showToast('Pilih minimal 1 halaman untuk diekstrak.', 'warning');
 
     try {
+        const PDFLib = getPDFLib();
         showToast('Mengekstrak halaman terpilih...', 'info');
         const srcDoc = await PDFLib.PDFDocument.load(state.rawPdfBytes);
         const newDoc = await PDFLib.PDFDocument.create();
@@ -1296,6 +1307,7 @@ async function executeImagesToPdf() {
     if (state.imgToPdfFiles.length === 0) return showToast('Pilih minimal 1 gambar.', 'warning');
 
     try {
+        const PDFLib = getPDFLib();
         showToast('Menyusun PDF dari foto...', 'info');
         const pdfDoc = await PDFLib.PDFDocument.create();
         const orientation = document.getElementById('img-pdf-orientation').value;
@@ -1368,6 +1380,7 @@ async function executeApplyWatermark() {
     if (!state.rawPdfBytes) return showToast('Buka file PDF terlebih dahulu.', 'warning');
 
     try {
+        const PDFLib = getPDFLib();
         showToast('Menerapkan watermark ke seluruh halaman...', 'info');
         const pdfDoc = await PDFLib.PDFDocument.load(state.rawPdfBytes);
         const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
