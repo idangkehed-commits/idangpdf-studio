@@ -1,0 +1,12 @@
+{
+  "name": "omnipdf-studio",
+  "version": "1.0.0",
+  "description": "All-in-One Modern PDF Tools & AI OCR Studio - 100% Client-Side Privacy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["pdf", "ocr", "pdf-tools", "tesseract", "pdf-editor", "merge-pdf", "split-pdf"],
+  "author": "Antigravity",
+  "license": "MIT"
+}

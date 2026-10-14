@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: omnipdf-studio
+    runtime: static
+    branch: main
+    buildCommand: ""
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
