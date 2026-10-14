@@ -23,7 +23,6 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-    // CORS headers for local tools
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -41,7 +40,6 @@ const server = http.createServer((req, res) => {
 
     const filePath = path.join(PUBLIC_DIR, reqPath);
 
-    // Security check to prevent directory traversal
     if (!filePath.startsWith(PUBLIC_DIR)) {
         res.writeHead(403, { 'Content-Type': 'text/plain' });
         res.end('403 Forbidden');
@@ -51,7 +49,7 @@ const server = http.createServer((req, res) => {
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
             res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
-            res.end('404 Not Found - OmniPDF Studio');
+            res.end('404 Not Found - IdangPDF Studio');
             return;
         }
 
@@ -70,7 +68,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
     console.log(`====================================================`);
-    console.log(`🚀 OmniPDF Studio & OCR Server Aktif!`);
+    console.log(`🚀 IdangPDF Studio & OCR Server Aktif!`);
     console.log(`📍 URL Lokal: http://localhost:${PORT}`);
     console.log(`🔒 100% Client-Side Privacy: Dokumen tidak diunggah ke internet`);
     console.log(`====================================================`);

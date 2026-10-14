@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: omnipdf-studio
+    name: idangpdf-studio
     runtime: static
     branch: main
     buildCommand: ""

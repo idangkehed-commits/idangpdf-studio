@@ -1,6 +1,6 @@
 /**
  * ========================================================
- * OmniPDF Studio & AI OCR - Core Application Logic
+ * IdangPDF Studio & AI OCR - Core Application Logic
  * 100% In-Browser Execution • Zero Server Data Transfer
  * ========================================================
  */
@@ -948,7 +948,7 @@ function downloadOcrDocx() {
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head><meta charset='utf-8'><title>Hasil Ekstraksi OCR</title></head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px;">
-            <h2>Hasil Ekstraksi Dokumen OCR - OmniPDF Studio</h2>
+            <h2>Hasil Ekstraksi Dokumen OCR - IdangPDF Studio</h2>
             <hr/>
             <p style="white-space: pre-wrap;">${escapeHtml(text)}</p>
         </body>
