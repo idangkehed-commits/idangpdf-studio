@@ -11,19 +11,10 @@
             theme: {
                 extend: {
                     colors: {
-                        slate: {
-                            850: '#131b2e',
-                            950: '#090d16',
-                        },
-                        brand: {
-                            50: '#f5f3ff',
-                            100: '#ede9fe',
-                            200: '#ddd6fe',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                        }
-                    }
+                        slate: { 850: '#131b2e', 950: '#090d16' },
+                        brand: { 50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+                    },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] }
                 }
             }
         }
@@ -34,873 +25,973 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <!-- pdf-lib CDN with local fallback -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-    <script>
-        if (!window.PDFLib) {
-            document.write('<script src="pdf-lib.min.js"><\/script>');
-        }
-    </script>
-    <!-- Tesseract.js OCR CDN -->
+    <script>if (!window.PDFLib) { document.write('<script src="pdf-lib.min.js"><\/script>'); }</script>
+    <!-- Tesseract.js OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <!-- JSZip for image batch export -->
+    <!-- JSZip for ZIP export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <!-- Custom Modern Stylesheet -->
+    <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased flex flex-col min-h-screen">
 
-    <!-- Top Minimalist App Navigation -->
+    <!-- ========================================================
+         TOP NAVIGATION — Premium Glass Bar
+         ======================================================== -->
     <header class="sticky top-0 z-50 glass-panel border-b border-slate-200/80">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <!-- Brand Logo -->
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('dashboard')">
-                <div class="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center text-white shadow-sm ring-1 ring-slate-800">
-                    <svg class="w-5 h-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-[60px] flex items-center justify-between gap-3">
+
+            <!-- Brand -->
+            <div class="flex items-center space-x-3 cursor-pointer flex-shrink-0" onclick="switchView('dashboard')">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center shadow-sm ring-1 ring-slate-700/50">
+                    <svg class="w-5 h-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                 </div>
-                <div>
-                    <div class="flex items-center space-x-2">
+                <div class="hidden sm:block">
+                    <div class="flex items-baseline space-x-2">
                         <span class="text-base font-extrabold tracking-tight text-slate-900">IdangPDF</span>
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded-md border border-slate-200">v2.0</span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-md">Studio</span>
                     </div>
-                    <div class="flex items-center space-x-1.5 text-[11px] text-slate-500 font-medium">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Client-Side Private Engine</span>
+                    <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                        <span>100% Lokal · Privasi Terjaga</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Navigation Tabs -->
-            <nav class="hidden lg:flex items-center space-x-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 text-xs font-semibold">
-                <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-tab px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5 active-tab bg-white text-slate-900 shadow-xs">
-                    <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Dashboard</span>
+            <!-- Desktop Nav Tabs -->
+            <nav class="hidden lg:flex items-center space-x-0.5 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/80 text-[11px] font-bold">
+                <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-tab active-tab px-3 py-1.5 rounded-xl text-slate-900 bg-white shadow-sm flex items-center space-x-1.5 transition">
+                    <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-indigo-500"></i><span>Beranda</span>
                 </button>
-                <button onclick="switchView('editor')" id="nav-editor" class="nav-tab px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                    <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Studio Editor</span>
+                <button onclick="switchView('editor')" id="nav-editor" class="nav-tab px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 flex items-center space-x-1.5 transition">
+                    <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i><span>Editor</span>
                 </button>
-                <button onclick="switchView('ocr')" id="nav-ocr" class="nav-tab px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                    <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>AI OCR</span>
+                <button onclick="switchView('ocr')" id="nav-ocr" class="nav-tab px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 flex items-center space-x-1.5 transition">
+                    <i data-lucide="scan-line" class="w-3.5 h-3.5"></i><span>AI OCR</span>
                 </button>
-                <button onclick="switchView('compress')" id="nav-compress" class="nav-tab px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                    <i data-lucide="file-archive" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Kompres PDF</span>
+                <button onclick="switchView('compress')" id="nav-compress" class="nav-tab px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 flex items-center space-x-1.5 transition">
+                    <i data-lucide="file-archive" class="w-3.5 h-3.5"></i><span>Kompres</span>
                 </button>
-                <button onclick="switchView('merge')" id="nav-merge" class="nav-tab px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                    <i data-lucide="layers-2" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Gabung</span>
+                <button onclick="switchView('merge')" id="nav-merge" class="nav-tab px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 flex items-center space-x-1.5 transition">
+                    <i data-lucide="layers-2" class="w-3.5 h-3.5"></i><span>Gabung</span>
                 </button>
-                <button onclick="switchView('split')" id="nav-split" class="nav-tab px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                    <i data-lucide="scissors" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Pisah</span>
+                <button onclick="switchView('split')" id="nav-split" class="nav-tab px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 flex items-center space-x-1.5 transition">
+                    <i data-lucide="scissors" class="w-3.5 h-3.5"></i><span>Pisah</span>
                 </button>
-                <button onclick="switchView('convert')" id="nav-convert" class="nav-tab px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Konversi</span>
+                <button onclick="switchView('convert')" id="nav-convert" class="nav-tab px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 flex items-center space-x-1.5 transition">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Konversi</span>
                 </button>
-                <button onclick="switchView('watermark')" id="nav-watermark" class="nav-tab px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                    <i data-lucide="stamp" class="w-3.5 h-3.5 text-slate-500"></i>
-                    <span>Watermark</span>
+                <button onclick="switchView('watermark')" id="nav-watermark" class="nav-tab px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 flex items-center space-x-1.5 transition">
+                    <i data-lucide="stamp" class="w-3.5 h-3.5"></i><span>Watermark</span>
                 </button>
             </nav>
 
-            <!-- Quick Action Button -->
-            <div class="flex items-center space-x-2">
-                <button onclick="triggerGlobalFileUpload()" class="btn-tactile px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
-                    <i data-lucide="plus" class="w-4 h-4 text-slate-300"></i>
-                    <span>Buka Dokumen</span>
+            <!-- Header Actions -->
+            <div class="flex items-center space-x-2 flex-shrink-0">
+                <!-- Current File Indicator -->
+                <div id="header-file-badge" class="hidden items-center space-x-2 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl text-[11px] font-bold text-indigo-700 max-w-[160px]">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                    <span id="header-file-name" class="truncate">dokumen.pdf</span>
+                </div>
+                <button onclick="triggerGlobalFileUpload()" class="btn-tactile btn-primary-glow px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm flex items-center space-x-1.5">
+                    <i data-lucide="upload" class="w-3.5 h-3.5 text-slate-300"></i>
+                    <span class="hidden sm:inline">Buka File</span>
+                    <span class="sm:hidden">+</span>
                 </button>
                 <input type="file" id="global-pdf-input" accept="application/pdf,image/*" class="hidden">
             </div>
         </div>
+
+        <!-- Mobile Nav Pills -->
+        <div class="lg:hidden px-4 pb-2">
+            <div class="mobile-nav-pill">
+                <button onclick="switchView('dashboard')" id="nav-mobile-dashboard" class="nav-tab active-tab flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-900 bg-white shadow-xs flex items-center space-x-1 transition">
+                    <i data-lucide="layout-grid" class="w-3 h-3"></i><span>Home</span>
+                </button>
+                <button onclick="switchView('editor')" class="flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-500 flex items-center space-x-1">
+                    <i data-lucide="pen-tool" class="w-3 h-3"></i><span>Editor</span>
+                </button>
+                <button onclick="switchView('ocr')" class="flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-500 flex items-center space-x-1">
+                    <i data-lucide="scan-line" class="w-3 h-3"></i><span>OCR</span>
+                </button>
+                <button onclick="switchView('compress')" class="flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-500 flex items-center space-x-1">
+                    <i data-lucide="file-archive" class="w-3 h-3"></i><span>Kompres</span>
+                </button>
+                <button onclick="switchView('merge')" class="flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-500 flex items-center space-x-1">
+                    <i data-lucide="layers-2" class="w-3 h-3"></i><span>Gabung</span>
+                </button>
+                <button onclick="switchView('split')" class="flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-500 flex items-center space-x-1">
+                    <i data-lucide="scissors" class="w-3 h-3"></i><span>Pisah</span>
+                </button>
+                <button onclick="switchView('convert')" class="flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-500 flex items-center space-x-1">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i><span>Konversi</span>
+                </button>
+                <button onclick="switchView('watermark')" class="flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-500 flex items-center space-x-1">
+                    <i data-lucide="stamp" class="w-3 h-3"></i><span>Watermark</span>
+                </button>
+            </div>
+        </div>
     </header>
 
-    <!-- Main Workspace Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
 
-        <!-- ========================================================
-             VIEW 1: MODERN BENTO DASHBOARD
-             ======================================================== -->
-        <section id="view-dashboard" class="view-section space-y-6">
-            <!-- Modern Bento Header & Dropzone Grid -->
+        <!-- ================================================================
+             VIEW 1: DASHBOARD
+             ================================================================ -->
+        <section id="view-dashboard" class="view-section space-y-6 animate-fade-in">
+
+            <!-- HERO + DROPZONE GRID -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                <!-- Left: Sleek Hero Card -->
-                <div class="lg:col-span-7 bg-slate-950 text-white rounded-2xl p-7 flex flex-col justify-between relative overflow-hidden shadow-sm">
-                    <div class="space-y-3 relative z-10">
-                        <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 text-slate-200 border border-white/10">
-                            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                            <span>Pemrosesan Lokal di Browser • Tanpa Batasan Kuota</span>
+
+                <!-- Hero Card -->
+                <div class="lg:col-span-7 hero-dashboard rounded-3xl p-7 sm:p-9 flex flex-col justify-between relative overflow-hidden text-white shadow-lg" style="min-height:260px">
+                    <div class="hero-grid-overlay"></div>
+                    <div class="space-y-4 relative z-10">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/10 text-slate-200 border border-white/15 backdrop-blur-sm">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>Tidak Ada Batas Kuota · Browser-Native Engine</span>
                         </div>
-                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-snug">
-                            Kelola, Edit, dan Ekstrak Teks PDF dengan Standar Profesional.
+                        <h1 class="text-2xl sm:text-[2rem] font-extrabold tracking-tight leading-tight">
+                            Suite PDF Profesional &<br>
+                            <span class="text-indigo-300">AI OCR</span> Berbasis Browser
                         </h1>
-                        <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-xl">
-                            Semua dokumen diproses langsung di memori perangkat Anda. Bebas kompresi berkas, anotasi, ekstraksi OCR Bahasa Indonesia & Inggris, serta penggabungan tanpa risiko privasi.
+                        <p class="text-sm text-slate-300/80 leading-relaxed max-w-lg">
+                            Kompres, edit, gabung, pisah, konversi, dan ekstrak teks — semuanya langsung di browser Anda tanpa mengunggah apapun ke server.
                         </p>
                     </div>
-
-                    <div class="pt-6 flex flex-wrap items-center gap-3 relative z-10 text-xs">
-                        <button onclick="switchView('editor')" class="btn-tactile px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold shadow-xs flex items-center space-x-1.5">
-                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                            <span>Buka Studio Editor</span>
+                    <div class="pt-6 flex flex-wrap items-center gap-2.5 relative z-10">
+                        <button onclick="triggerGlobalFileUpload()" class="btn-tactile px-5 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl font-bold text-sm shadow-lg flex items-center space-x-2">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                            <span>Buka Dokumen</span>
                         </button>
-                        <button onclick="switchView('compress')" class="btn-tactile px-4 py-2 bg-white/10 hover:bg-white/15 text-white border border-white/15 rounded-xl font-semibold flex items-center space-x-1.5">
-                            <i data-lucide="file-archive" class="w-3.5 h-3.5 text-indigo-300"></i>
-                            <span>Kompres Ukuran PDF</span>
-                        </button>
-                        <button onclick="switchView('ocr')" class="btn-tactile px-4 py-2 bg-white/10 hover:bg-white/15 text-white border border-white/15 rounded-xl font-semibold flex items-center space-x-1.5">
+                        <button onclick="switchView('ocr')" class="btn-tactile px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-bold text-xs flex items-center space-x-1.5">
                             <i data-lucide="scan-text" class="w-3.5 h-3.5 text-emerald-300"></i>
-                            <span>Scan OCR</span>
+                            <span>Coba AI OCR</span>
+                        </button>
+                        <button onclick="switchView('merge')" class="btn-tactile px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-bold text-xs flex items-center space-x-1.5">
+                            <i data-lucide="layers-2" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>Gabung PDF</span>
                         </button>
                     </div>
-
-                    <!-- Subtle background aesthetic pattern -->
-                    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
                 </div>
 
-                <!-- Right: Sleek Dropzone -->
-                <div class="lg:col-span-5 dropzone-modern p-6 flex flex-col items-center justify-center text-center space-y-3" onclick="triggerGlobalFileUpload()">
-                    <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
-                        <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                <!-- Dropzone -->
+                <div class="lg:col-span-5 dropzone-modern flex flex-col items-center justify-center text-center p-8 space-y-4" onclick="triggerGlobalFileUpload()" style="min-height:220px">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-200 shadow-sm">
+                        <i data-lucide="upload-cloud" class="w-7 h-7"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-slate-900">Tarik & Lepas File ke Sini</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">atau klik untuk menelusuri dari komputer</p>
+                        <h3 class="text-sm font-extrabold text-slate-900">Tarik & Lepas File ke Sini</h3>
+                        <p class="text-xs text-slate-400 mt-1">atau klik untuk memilih dari komputer</p>
                     </div>
-                    <div class="text-[11px] text-slate-400 flex items-center space-x-3 pt-1">
-                        <span>• PDF</span>
-                        <span>• Gambar Scan</span>
-                        <span>• JPG/PNG</span>
+                    <div class="flex items-center space-x-4 text-[11px] font-semibold text-slate-400 pt-1">
+                        <span class="flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-400"></i>PDF</span>
+                        <span class="flex items-center gap-1"><i data-lucide="image" class="w-3.5 h-3.5 text-blue-400"></i>JPG/PNG</span>
+                        <span class="flex items-center gap-1"><i data-lucide="scan" class="w-3.5 h-3.5 text-emerald-400"></i>Scan</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Bento Tools Grid -->
+            <!-- Tools Grid -->
             <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center space-x-1.5">
-                        <i data-lucide="grid" class="w-4 h-4"></i>
-                        <span>Koleksi Alat Dokumen</span>
-                    </h2>
-                    <span class="text-xs text-slate-400">8 Alat Terpadu</span>
+                <div class="section-header text-xs font-bold uppercase tracking-widest text-slate-400">
+                    <i data-lucide="grid-3x3" class="w-3.5 h-3.5"></i>
+                    <span>8 Alat Dokumen Terpadu</span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Tool 1: Studio Editor -->
+                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                    <!-- 1: Studio Editor -->
                     <div onclick="switchView('editor')" class="bento-card group flex flex-col justify-between">
                         <div class="space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition">
-                                <i data-lucide="edit-3" class="w-5 h-5"></i>
+                            <div class="flex items-start justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-200 group-hover:scale-110 transition">
+                                    <i data-lucide="edit-3" class="w-5 h-5"></i>
+                                </div>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-900 group-hover:text-indigo-600 transition">Studio Editor</h3>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Tambah teks, tanda tangan digital, stempel, sensor informasi, dan rotasi halaman.</p>
+                                <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-indigo-600 transition leading-tight">Studio Editor</h3>
+                                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Tambah teks, tanda tangan, stempel, sensor, dan rotasi halaman PDF.</p>
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
+                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-500 group-hover:text-indigo-600">
                             <span>Buka Editor</span>
                             <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
                         </div>
                     </div>
 
-                    <!-- Tool 2: Compress PDF (NEW FEATURE!) -->
-                    <div onclick="switchView('compress')" class="bento-card group flex flex-col justify-between border-indigo-200/70 bg-gradient-to-b from-indigo-50/20 to-white">
+                    <!-- 2: Compress PDF -->
+                    <div onclick="switchView('compress')" class="bento-card group flex flex-col justify-between bg-gradient-to-b from-violet-50/40 to-white border-violet-200/60">
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <div class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center group-hover:scale-105 transition">
+                            <div class="flex items-start justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-100 to-violet-50 text-violet-600 flex items-center justify-center border border-violet-200 group-hover:scale-110 transition">
                                     <i data-lucide="file-archive" class="w-5 h-5"></i>
                                 </div>
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">TERBARU</span>
+                                <span class="badge badge-new text-[9px] mt-0.5">TERBARU</span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-900 group-hover:text-violet-600 transition">Kompres PDF</h3>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Kecilkan ukuran file hingga 80% dengan kualitas tajam untuk WhatsApp, email, & arsip.</p>
+                                <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-violet-600 transition leading-tight">Kompres PDF</h3>
+                                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Kecilkan hingga 80% tanpa merusak kualitas teks untuk email & WhatsApp.</p>
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-violet-600">
+                        <div class="pt-4 mt-4 border-t border-violet-100/70 flex items-center justify-between text-xs font-bold text-violet-500 group-hover:text-violet-600">
                             <span>Mulai Kompres</span>
                             <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
                         </div>
                     </div>
 
-                    <!-- Tool 3: AI OCR Scanner -->
+                    <!-- 3: AI OCR -->
                     <div onclick="switchView('ocr')" class="bento-card group flex flex-col justify-between">
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition">
+                            <div class="flex items-start justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200 group-hover:scale-110 transition">
                                     <i data-lucide="scan-line" class="w-5 h-5"></i>
                                 </div>
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">WASM OCR</span>
+                                <span class="badge badge-wasm text-[9px] mt-0.5">WASM AI</span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-900 group-hover:text-emerald-600 transition">AI OCR Scanner</h3>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Ekstrak tulisan dari PDF scan atau foto dokumen ke format teks Word & TXT.</p>
+                                <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-emerald-600 transition leading-tight">AI OCR Scanner</h3>
+                                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Ekstrak tulisan dari scan PDF, foto KTP, kwitansi ke teks Word & TXT.</p>
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-600">
+                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-500 group-hover:text-emerald-600">
                             <span>Scan Teks</span>
                             <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
                         </div>
                     </div>
 
-                    <!-- Tool 4: Merge PDF -->
+                    <!-- 4: Merge PDF -->
                     <div onclick="switchView('merge')" class="bento-card group flex flex-col justify-between">
                         <div class="space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition">
-                                <i data-lucide="layers-2" class="w-5 h-5"></i>
+                            <div class="flex items-start justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 flex items-center justify-center border border-blue-200 group-hover:scale-110 transition">
+                                    <i data-lucide="layers-2" class="w-5 h-5"></i>
+                                </div>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-900 group-hover:text-blue-600 transition">Gabung PDF (Merge)</h3>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Satukan beberapa dokumen menjadi satu file dengan urutan yang fleksibel.</p>
+                                <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-blue-600 transition leading-tight">Gabung PDF</h3>
+                                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Satukan beberapa dokumen PDF menjadi satu file dengan urutan fleksibel.</p>
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600">
+                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-500 group-hover:text-blue-600">
                             <span>Satukan File</span>
                             <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
                         </div>
                     </div>
 
-                    <!-- Tool 5: Split PDF -->
+                    <!-- 5: Split PDF -->
                     <div onclick="switchView('split')" class="bento-card group flex flex-col justify-between">
                         <div class="space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition">
-                                <i data-lucide="scissors" class="w-5 h-5"></i>
+                            <div class="flex items-start justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 flex items-center justify-center border border-amber-200 group-hover:scale-110 transition">
+                                    <i data-lucide="scissors" class="w-5 h-5"></i>
+                                </div>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-600 transition">Pisah & Ekstrak</h3>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Ambil lembar tertentu atau tentukan nomor rentang halaman untuk diekstrak.</p>
+                                <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-amber-600 transition leading-tight">Pisah & Ekstrak</h3>
+                                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Pilih halaman tertentu atau tentukan rentang nomor halaman untuk diekstrak.</p>
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-amber-600">
-                            <span>Pisahkan Halaman</span>
+                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-amber-500 group-hover:text-amber-600">
+                            <span>Pisahkan</span>
                             <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
                         </div>
                     </div>
 
-                    <!-- Tool 6: PDF to Image -->
+                    <!-- 6: PDF to Image -->
                     <div onclick="switchView('convert'); setConvertTab('pdf-to-img');" class="bento-card group flex flex-col justify-between">
                         <div class="space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center group-hover:scale-105 transition">
-                                <i data-lucide="image" class="w-5 h-5"></i>
+                            <div class="flex items-start justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-100 to-pink-50 text-pink-600 flex items-center justify-center border border-pink-200 group-hover:scale-110 transition">
+                                    <i data-lucide="image" class="w-5 h-5"></i>
+                                </div>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-900 group-hover:text-pink-600 transition">PDF ke Gambar</h3>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Ubah tiap lembar PDF menjadi gambar jernih PNG/JPG (unduh satuan atau ZIP).</p>
+                                <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-pink-600 transition leading-tight">PDF ke Gambar</h3>
+                                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Ubah tiap halaman PDF menjadi PNG/JPG jernih — unduh satuan atau ZIP.</p>
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-pink-600">
-                            <span>Konversi Gambar</span>
+                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-pink-500 group-hover:text-pink-600">
+                            <span>Konversi</span>
                             <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
                         </div>
                     </div>
 
-                    <!-- Tool 7: Image to PDF -->
+                    <!-- 7: Image to PDF -->
                     <div onclick="switchView('convert'); setConvertTab('img-to-pdf');" class="bento-card group flex flex-col justify-between">
                         <div class="space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center group-hover:scale-105 transition">
-                                <i data-lucide="file-image" class="w-5 h-5"></i>
+                            <div class="flex items-start justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-200 group-hover:scale-110 transition">
+                                    <i data-lucide="file-image" class="w-5 h-5"></i>
+                                </div>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-900 group-hover:text-cyan-600 transition">Foto ke PDF</h3>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Rangkai foto kuitansi, struk, atau berkas JPG/PNG menjadi satu dokumen PDF A4.</p>
+                                <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-cyan-600 transition leading-tight">Foto ke PDF</h3>
+                                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Rangkai foto kwitansi, struk, atau gambar JPG/PNG menjadi satu PDF A4.</p>
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-cyan-600">
+                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-cyan-500 group-hover:text-cyan-600">
                             <span>Susun PDF</span>
                             <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
                         </div>
                     </div>
 
-                    <!-- Tool 8: Watermark & Stempel -->
+                    <!-- 8: Watermark -->
                     <div onclick="switchView('watermark')" class="bento-card group flex flex-col justify-between">
                         <div class="space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center group-hover:scale-105 transition">
-                                <i data-lucide="stamp" class="w-5 h-5"></i>
+                            <div class="flex items-start justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-100 to-teal-50 text-teal-600 flex items-center justify-center border border-teal-200 group-hover:scale-110 transition">
+                                    <i data-lucide="stamp" class="w-5 h-5"></i>
+                                </div>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-900 group-hover:text-teal-600 transition">Watermark & Nomor</h3>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Sematkan stempel kepemilikan diagonal dan penomoran otomatis pada seluruh halaman.</p>
+                                <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-teal-600 transition leading-tight">Watermark & Nomor</h3>
+                                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Sematkan stempel hak cipta diagonal dan penomoran halaman otomatis.</p>
                             </div>
                         </div>
-                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-teal-600">
+                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-teal-500 group-hover:text-teal-600">
                             <span>Atur Watermark</span>
                             <i data-lucide="arrow-up-right" class="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition"></i>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Bottom Privacy Row -->
+            <div class="flex flex-wrap items-center justify-center gap-6 py-2">
+                <div class="flex items-center space-x-2 text-xs text-slate-400 font-semibold">
+                    <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <span>Zero Cloud Upload</span>
+                </div>
+                <div class="flex items-center space-x-2 text-xs text-slate-400 font-semibold">
+                    <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <span>In-Browser WASM Engine</span>
+                </div>
+                <div class="flex items-center space-x-2 text-xs text-slate-400 font-semibold">
+                    <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <span>Privasi 100% Terjamin</span>
+                </div>
+            </div>
         </section>
 
-        <!-- ========================================================
-             VIEW 2: DEDICATED COMPRESS PDF (FITUR BARU)
-             ======================================================== -->
-        <section id="view-compress" class="view-section hidden space-y-6">
+        <!-- ================================================================
+             VIEW 2: COMPRESS PDF
+             ================================================================ -->
+        <section id="view-compress" class="view-section hidden space-y-5 animate-slide-up">
             <div class="surface-card p-6 sm:p-8 space-y-6">
-                <!-- Header -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
                     <div>
-                        <h2 class="text-xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
-                            <i data-lucide="file-archive" class="w-6 h-6 text-violet-600"></i>
-                            <span>Kompres Ukuran File PDF</span>
-                        </h2>
-                        <p class="text-xs text-slate-500 mt-1">Kecilkan ukuran file dokumen PDF tanpa menurunkan keterbacaan teks dan diagram.</p>
+                        <div class="flex items-center space-x-2.5 mb-1">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-100 to-violet-50 text-violet-600 flex items-center justify-center border border-violet-200">
+                                <i data-lucide="file-archive" class="w-5 h-5"></i>
+                            </div>
+                            <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Kompres Ukuran File PDF</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 ml-11.5">Kecilkan file PDF tanpa merusak keterbacaan teks dan gambar.</p>
                     </div>
-                    <div class="text-xs font-medium text-slate-500 flex items-center space-x-1.5 bg-slate-100 px-3 py-1.5 rounded-lg">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-                        <span>Diproses 100% Lokal di Browser</span>
+                    <div class="text-xs font-semibold text-emerald-700 flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        <span>100% Lokal di Browser</span>
                     </div>
                 </div>
 
-                <!-- Dropzone if no document loaded -->
-                <div id="compress-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-3" onclick="triggerGlobalFileUpload()">
-                    <div class="w-14 h-14 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center border border-violet-100">
+                <!-- Dropzone -->
+                <div id="compress-dropzone" class="dropzone-modern p-12 text-center flex flex-col items-center justify-center space-y-3" onclick="triggerGlobalFileUpload()">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-100 to-violet-50 text-violet-600 flex items-center justify-center border border-violet-200 shadow-sm">
                         <i data-lucide="file-down" class="w-7 h-7"></i>
                     </div>
                     <div>
-                        <h4 class="text-sm font-bold text-slate-900">Pilih Dokumen PDF yang Ingin Dikompres</h4>
-                        <p class="text-xs text-slate-500 mt-0.5">Tarik dan lepas file ke area ini atau klik untuk memilih</p>
+                        <h4 class="text-sm font-extrabold text-slate-900">Pilih Dokumen PDF untuk Dikompres</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Tarik & lepas atau klik untuk memilih</p>
                     </div>
                 </div>
 
-                <!-- Compression Workspace (Active Document) -->
+                <!-- Active Panel -->
                 <div id="compress-active-panel" class="hidden space-y-6">
-                    <!-- File Overview Card -->
-                    <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <!-- File Info Bar -->
+                    <div class="file-info-bar">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center border border-violet-200">
                                 <i data-lucide="file-text" class="w-5 h-5"></i>
                             </div>
                             <div>
-                                <h4 id="compress-file-name" class="text-xs font-bold text-slate-900 truncate max-w-xs sm:max-w-md">-</h4>
-                                <p class="text-[11px] text-slate-500">
-                                    Ukuran Saat Ini: <span id="compress-file-orig-size" class="font-bold text-slate-800">-</span> • 
+                                <h4 id="compress-file-name" class="text-xs font-extrabold text-slate-900 truncate max-w-[240px] sm:max-w-md">-</h4>
+                                <p class="text-[11px] text-slate-400 mt-0.5">
+                                    Ukuran: <span id="compress-file-orig-size" class="font-bold text-slate-700">-</span> &bull;
                                     <span id="compress-file-pages">- Halaman</span>
                                 </p>
                             </div>
                         </div>
-                        <button onclick="triggerGlobalFileUpload()" class="text-xs text-slate-600 hover:text-slate-900 font-semibold underline">Ganti File</button>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="triggerGlobalFileUpload()" class="btn-close-file">
+                                <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
+                                <span>Ganti</span>
+                            </button>
+                            <button onclick="clearCurrentFile()" class="btn-close-file">
+                                <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                <span>Hapus File</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Compression Level Options -->
+                    <!-- Compression Levels -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Pilih Tingkat Kompresi:</label>
+                        <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-widest mb-3">Pilih Tingkat Kompresi:</label>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- Level 1: Extreme -->
                             <div onclick="selectCompressLevel('extreme')" id="compress-lvl-extreme" class="compress-card">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-900">Kompresi Ekstrem</span>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">Ukuran Terkecil</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">Ukuran Min</span>
                                 </div>
-                                <p class="text-xs text-slate-500">Reduksi hingga ~75%. Sangat cocok untuk upload syarat pendaftaran WhatsApp, email, dan portal berkas berkuota ketat.</p>
+                                <p class="text-[11px] text-slate-400 leading-relaxed">Reduksi hingga ~75%. Ideal untuk upload ke portal berkas, WA, atau email dengan kuota ketat.</p>
                             </div>
-
-                            <!-- Level 2: Recommended -->
                             <div onclick="selectCompressLevel('recommended')" id="compress-lvl-recommended" class="compress-card active">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-900">Rekomendasi (Seimbang)</span>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Paling Populer</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Populer</span>
                                 </div>
-                                <p class="text-xs text-slate-500">Reduksi ~40-60%. Teks tetap sangat tajam dan jernih, gambar dikompres optimal tanpa pecah.</p>
+                                <p class="text-[11px] text-slate-400 leading-relaxed">Reduksi ~40–60%. Teks tetap sangat tajam, gambar dikompres optimal tanpa pecah.</p>
                             </div>
-
-                            <!-- Level 3: Light -->
                             <div onclick="selectCompressLevel('light')" id="compress-lvl-light" class="compress-card">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-900">Kompresi Ringan</span>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Kualitas Tinggi</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Kualitas Max</span>
                                 </div>
-                                <p class="text-xs text-slate-500">Reduksi ~20-30%. Kualitas maksimal untuk arsip resmi, laporan presentasi, atau dokumen cetak.</p>
+                                <p class="text-[11px] text-slate-400 leading-relaxed">Reduksi ~20–30%. Kualitas maksimal untuk arsip resmi, laporan, atau dokumen cetak.</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Progress Bar during compression -->
-                    <div id="compress-progress-box" class="hidden space-y-2 p-4 rounded-xl bg-violet-50/70 border border-violet-200">
-                        <div class="flex justify-between items-center text-xs font-bold text-violet-900">
+                    <!-- Progress -->
+                    <div id="compress-progress-box" class="hidden p-4 rounded-2xl bg-violet-50 border border-violet-200 space-y-2">
+                        <div class="flex justify-between items-center text-xs font-bold text-violet-800">
                             <span id="compress-status-label" class="flex items-center space-x-2">
                                 <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-violet-600"></i>
                                 <span>Mengoptimasi halaman...</span>
                             </span>
-                            <span id="compress-percent-label">0%</span>
+                            <span id="compress-percent-label" class="tabular-nums">0%</span>
                         </div>
                         <div class="w-full bg-violet-200/60 rounded-full h-2 overflow-hidden">
-                            <div id="compress-progress-bar" class="bg-violet-600 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+                            <div id="compress-progress-bar" class="progress-bar-animated" style="width:0%;background:linear-gradient(90deg,#7c3aed,#4f46e5,#7c3aed);background-size:200%"></div>
                         </div>
                     </div>
 
-                    <!-- Result Banner after compression -->
-                    <div id="compress-result-box" class="hidden p-5 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <!-- Result -->
+                    <div id="compress-result-box" class="hidden p-5 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div class="flex items-center space-x-3">
-                            <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-sm">
                                 <i data-lucide="check-circle-2" class="w-6 h-6"></i>
                             </div>
                             <div>
-                                <h4 class="text-sm font-bold text-emerald-950">Kompresi Selesai!</h4>
+                                <h4 class="text-sm font-extrabold text-emerald-900">Kompresi Berhasil!</h4>
                                 <p class="text-xs text-emerald-700 mt-0.5">
-                                    Ukuran berkurang dari <span id="res-orig-size" class="font-bold">-</span> menjadi 
+                                    <span id="res-orig-size" class="font-bold">-</span> &rarr;
                                     <span id="res-new-size" class="font-extrabold text-emerald-900">-</span>
-                                    (<span id="res-saved-percent" class="font-bold text-emerald-900">-</span> terhemat)
+                                    <span class="ml-1">(<span id="res-saved-percent" class="font-bold">-</span> terhemat)</span>
                                 </p>
                             </div>
                         </div>
-                        <button onclick="downloadCompressedPdf()" class="btn-tactile px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-2">
+                        <button onclick="downloadCompressedPdf()" class="btn-tactile btn-emerald-glow px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center space-x-2">
                             <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>Unduh PDF yang Terkompresi</span>
+                            <span>Unduh PDF Terkompresi</span>
                         </button>
                     </div>
 
-                    <!-- Trigger Button -->
-                    <div id="compress-action-row" class="flex justify-end pt-2">
-                        <button onclick="startPdfCompression()" id="btn-run-compress" class="btn-tactile px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-2 transition">
-                            <i data-lucide="file-archive" class="w-4 h-4"></i>
-                            <span>Mulai Kompres Dokumen</span>
+                    <div class="flex justify-end">
+                        <button onclick="startPdfCompression()" id="btn-run-compress" class="btn-tactile btn-violet-glow px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-extrabold shadow-sm flex items-center space-x-2">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                            <span>Mulai Kompres Sekarang</span>
                         </button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ========================================================
-             VIEW 3: STUDIO EDITOR & ANOTASI (WYSIWYG WORKSPACE)
-             ======================================================== -->
+        <!-- ================================================================
+             VIEW 3: STUDIO EDITOR
+             ================================================================ -->
         <section id="view-editor" class="view-section hidden flex-1 flex flex-col space-y-4">
-            <!-- Floating Workspace Dock -->
-            <div class="floating-dock p-2.5 flex flex-wrap items-center justify-between gap-2.5">
-                <!-- Action Tools -->
-                <div class="flex items-center space-x-1 overflow-x-auto pb-1 sm:pb-0">
-                    <button id="tool-select" onclick="setActiveEditorTool('select')" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 bg-slate-900 text-white shadow-xs">
-                        <i data-lucide="mouse-pointer-2" class="w-3.5 h-3.5"></i>
-                        <span>Pilih</span>
+            <!-- Floating Toolbar -->
+            <div class="floating-dock p-2 sm:p-2.5 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center space-x-0.5 overflow-x-auto pb-0.5 sm:pb-0">
+                    <button id="tool-select" onclick="setActiveEditorTool('select')" class="dock-tool-btn active">
+                        <i data-lucide="mouse-pointer-2" class="w-3.5 h-3.5"></i><span>Pilih</span>
                     </button>
-                    <button onclick="openAddTextModal()" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 text-slate-700 hover:bg-slate-100 transition">
-                        <i data-lucide="type" class="w-3.5 h-3.5 text-slate-500"></i>
-                        <span>+ Teks</span>
+                    <button onclick="openAddTextModal()" class="dock-tool-btn">
+                        <i data-lucide="type" class="w-3.5 h-3.5 text-indigo-400"></i><span>+ Teks</span>
                     </button>
-                    <button onclick="openSignatureModal()" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 text-slate-700 hover:bg-slate-100 transition">
-                        <i data-lucide="signature" class="w-3.5 h-3.5 text-slate-500"></i>
-                        <span>+ Tanda Tangan</span>
+                    <button onclick="openSignatureModal()" class="dock-tool-btn">
+                        <i data-lucide="pen-line" class="w-3.5 h-3.5 text-blue-400"></i><span>+ Tanda Tangan</span>
                     </button>
-                    <button onclick="openStampModal()" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 text-slate-700 hover:bg-slate-100 transition">
-                        <i data-lucide="stamp" class="w-3.5 h-3.5 text-slate-500"></i>
-                        <span>+ Stempel</span>
+                    <button onclick="openStampModal()" class="dock-tool-btn">
+                        <i data-lucide="stamp" class="w-3.5 h-3.5 text-amber-400"></i><span>+ Stempel</span>
                     </button>
-                    <button onclick="addRedactBox()" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 text-slate-700 hover:bg-slate-100 transition">
-                        <i data-lucide="eye-off" class="w-3.5 h-3.5 text-slate-500"></i>
-                        <span>Sensor (Redact)</span>
+                    <button onclick="addRedactBox()" class="dock-tool-btn">
+                        <i data-lucide="eye-off" class="w-3.5 h-3.5 text-rose-400"></i><span>Sensor</span>
                     </button>
-                    <button onclick="runOcrCurrentPage()" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition">
-                        <i data-lucide="scan" class="w-3.5 h-3.5"></i>
-                        <span>OCR Halaman</span>
+                    <button onclick="runOcrCurrentPage()" class="dock-tool-btn bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
+                        <i data-lucide="scan" class="w-3.5 h-3.5"></i><span>OCR Halaman</span>
                     </button>
                 </div>
-
-                <!-- Page Navigation & Save Action -->
-                <div class="flex items-center space-x-2">
-                    <button onclick="prevEditorPage()" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition" title="Halaman Sebelumnya">
+                <div class="flex items-center space-x-1.5">
+                    <!-- File info in toolbar -->
+                    <div id="editor-file-info" class="hidden sm:flex items-center space-x-2 text-xs text-slate-500 font-semibold bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400 flex-shrink-0"></i>
+                        <span id="editor-file-name-label" class="truncate max-w-[120px]">-</span>
+                    </div>
+                    <button onclick="prevEditorPage()" class="dock-tool-btn !px-2" title="Halaman Sebelumnya">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </button>
-                    <span id="editor-page-indicator" class="text-xs font-semibold text-slate-700 px-1">1 / 1</span>
-                    <button onclick="nextEditorPage()" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition" title="Halaman Berikutnya">
+                    <span id="editor-page-indicator" class="text-xs font-bold text-slate-600 px-1 tabular-nums">1 / 1</span>
+                    <button onclick="nextEditorPage()" class="dock-tool-btn !px-2" title="Halaman Berikutnya">
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </button>
-                    <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
-                    <button onclick="rotateCurrentEditorPage()" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition" title="Putar 90 Derajat">
+                    <div class="h-4 w-px bg-slate-200 mx-0.5"></div>
+                    <button onclick="rotateCurrentEditorPage()" class="dock-tool-btn !px-2" title="Putar 90°">
                         <i data-lucide="rotate-cw" class="w-4 h-4"></i>
                     </button>
-                    <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
-                    <button onclick="exportEditedPdf()" class="btn-tactile px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center space-x-1.5">
+                    <button onclick="clearCurrentFile()" class="dock-tool-btn !px-2 text-rose-400 hover:bg-rose-50 hover:text-rose-600" title="Tutup Dokumen">
+                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="exportEditedPdf()" class="btn-tactile btn-primary-glow px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold shadow-sm flex items-center space-x-1.5">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         <span>Simpan PDF</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Workspace Viewport -->
-            <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-[580px]">
-                <!-- Left Thumbnails Sidebar -->
-                <div class="w-full lg:w-44 surface-card p-3 flex flex-row lg:flex-col overflow-auto space-x-2 lg:space-x-0 lg:space-y-2.5 max-h-[140px] lg:max-h-[700px]">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden lg:block mb-1">Daftar Halaman</div>
+            <!-- Workspace -->
+            <div class="flex-1 flex flex-col lg:flex-row gap-4" style="min-height:560px">
+                <!-- Thumbnail Sidebar -->
+                <div class="w-full lg:w-44 surface-card p-3 flex flex-row lg:flex-col overflow-auto gap-2 max-h-[130px] lg:max-h-[650px]">
+                    <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest hidden lg:block mb-1.5 px-1">Halaman</div>
                     <div id="editor-thumbnails-container" class="flex flex-row lg:flex-col gap-2"></div>
                 </div>
 
-                <!-- Center Canvas Area -->
-                <div id="editor-canvas-scroll" class="flex-1 bg-slate-200/60 rounded-2xl border border-slate-200 p-4 overflow-auto flex items-center justify-center relative min-h-[460px]">
-                    <div id="editor-empty-state" class="text-center p-8 space-y-3">
-                        <div class="w-14 h-14 rounded-2xl bg-white text-slate-400 flex items-center justify-center mx-auto shadow-xs border border-slate-200">
-                            <i data-lucide="file-plus" class="w-7 h-7"></i>
+                <!-- Canvas Area -->
+                <div id="editor-canvas-scroll" class="flex-1 bg-gradient-to-br from-slate-200 to-slate-300 rounded-2xl border border-slate-200 p-4 overflow-auto flex items-center justify-center relative">
+                    <!-- Empty State -->
+                    <div id="editor-empty-state" class="text-center p-8 space-y-4 animate-fade-in">
+                        <div class="w-16 h-16 rounded-2xl bg-white text-slate-300 flex items-center justify-center mx-auto shadow-sm border border-slate-200">
+                            <i data-lucide="file-plus" class="w-8 h-8"></i>
                         </div>
-                        <h4 class="font-bold text-sm text-slate-800">Belum Ada Dokumen Terbuka</h4>
-                        <p class="text-xs text-slate-500 max-w-xs mx-auto">Pilih dokumen untuk mulai menambahkan teks, stempel, sensor informasi, atau paraf.</p>
-                        <button onclick="triggerGlobalFileUpload()" class="btn-tactile px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl">
-                            Pilih Dokumen PDF
+                        <div>
+                            <h4 class="font-extrabold text-sm text-slate-700">Belum Ada Dokumen</h4>
+                            <p class="text-xs text-slate-400 max-w-xs mx-auto mt-1">Buka file PDF untuk mulai menambahkan teks, tanda tangan, stempel, atau sensor area.</p>
+                        </div>
+                        <button onclick="triggerGlobalFileUpload()" class="btn-tactile btn-primary-glow px-5 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow-sm">
+                            Pilih File PDF
                         </button>
                     </div>
-
-                    <!-- PDF Canvas Container -->
+                    <!-- PDF Canvas -->
                     <div id="editor-viewport" class="pdf-viewport-container hidden">
                         <canvas id="editor-canvas" class="pdf-canvas"></canvas>
                         <div id="editor-annotation-layer" class="annotation-layer"></div>
                     </div>
                 </div>
 
-                <!-- Right Inspector / OCR Results Drawer -->
-                <div class="w-full lg:w-80 surface-card p-4 flex flex-col space-y-3.5">
+                <!-- Right Panel: OCR & Info -->
+                <div class="w-full lg:w-72 surface-card p-4 flex flex-col space-y-3">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                        <h4 class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
-                            <i data-lucide="inspect" class="w-4 h-4 text-indigo-600"></i>
-                            <span>OCR & Rincian Dokumen</span>
+                        <h4 class="font-extrabold text-xs text-slate-900 flex items-center space-x-1.5">
+                            <i data-lucide="scan-text" class="w-4 h-4 text-emerald-500"></i>
+                            <span>OCR & Info Dokumen</span>
                         </h4>
-                        <span id="ocr-status-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold">Siap</span>
+                        <span id="ocr-status-badge" class="badge bg-slate-100 text-slate-600 border-slate-200">Siap</span>
                     </div>
 
-                    <!-- Live OCR Progress -->
-                    <div id="editor-ocr-progress-box" class="hidden space-y-1.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <div class="flex justify-between text-[11px] font-semibold text-slate-700">
-                            <span id="editor-ocr-status-text">Memproses karakter...</span>
+                    <!-- Language Select -->
+                    <div class="flex items-center space-x-2 text-xs">
+                        <span class="font-bold text-slate-500">Bahasa OCR:</span>
+                        <select id="editor-ocr-lang-select" class="form-select form-input flex-1 !text-[11px]">
+                            <option value="ind">Bahasa Indonesia</option>
+                            <option value="eng">English</option>
+                            <option value="ind+eng">Indonesia + English</option>
+                        </select>
+                    </div>
+
+                    <!-- OCR Progress -->
+                    <div id="editor-ocr-progress-box" class="hidden space-y-1.5 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                        <div class="flex justify-between text-[11px] font-bold text-emerald-800">
+                            <span id="editor-ocr-status-text">Memproses...</span>
                             <span id="editor-ocr-percent-text">0%</span>
                         </div>
-                        <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                            <div id="editor-ocr-progress-bar" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+                        <div class="w-full bg-emerald-200/60 rounded-full h-1.5 overflow-hidden">
+                            <div id="editor-ocr-progress-bar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-200" style="width:0%"></div>
                         </div>
                     </div>
 
-                    <!-- Extracted Textarea -->
+                    <!-- Result Textarea -->
                     <div class="flex-1 flex flex-col space-y-1.5">
-                        <label class="text-[11px] font-bold text-slate-500">Teks Hasil OCR Halaman:</label>
-                        <textarea id="editor-ocr-text-result" placeholder="Klik 'OCR Halaman' di atas untuk memindai teks pada halaman yang aktif..." class="flex-1 w-full p-3 text-xs font-mono-ocr border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none min-h-[170px] bg-slate-50"></textarea>
+                        <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Teks Hasil OCR:</label>
+                        <textarea id="editor-ocr-text-result" placeholder="Klik 'OCR Halaman' untuk memindai teks..." class="flex-1 w-full p-3 text-[11px] font-mono-ocr border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none min-h-[140px] bg-slate-50 text-slate-700"></textarea>
                     </div>
 
                     <div class="flex items-center space-x-2">
-                        <button onclick="copyEditorOcrText()" class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center justify-center space-x-1">
-                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                            <span>Salin</span>
+                        <button onclick="copyEditorOcrText()" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center justify-center space-x-1.5">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Salin</span>
                         </button>
-                        <button onclick="downloadEditorOcrTxt()" class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition flex items-center justify-center space-x-1">
-                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                            <span>Unduh .TXT</span>
+                        <button onclick="downloadEditorOcrTxt()" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition flex items-center justify-center space-x-1.5">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>Unduh .TXT</span>
                         </button>
                     </div>
 
-                    <!-- Document Metadata -->
-                    <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-500 space-y-1">
-                        <div class="flex justify-between">
-                            <span>Nama File:</span>
-                            <span id="info-filename" class="font-semibold text-slate-800 truncate max-w-[140px]">-</span>
+                    <!-- Doc Metadata -->
+                    <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                        <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Info Dokumen</div>
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-slate-400">Nama File</span>
+                            <span id="info-filename" class="font-bold text-slate-800 truncate max-w-[140px]">-</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span>Total Halaman:</span>
-                            <span id="info-pages" class="font-semibold text-slate-800">-</span>
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-slate-400">Total Halaman</span>
+                            <span id="info-pages" class="font-bold text-slate-800">-</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span>Ukuran File:</span>
-                            <span id="info-filesize" class="font-semibold text-slate-800">-</span>
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-slate-400">Ukuran File</span>
+                            <span id="info-filesize" class="font-bold text-slate-800">-</span>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ========================================================
-             VIEW 4: DEDICATED AI OCR SCANNER
-             ======================================================== -->
-        <section id="view-ocr" class="view-section hidden space-y-6">
+        <!-- ================================================================
+             VIEW 4: AI OCR SCANNER
+             ================================================================ -->
+        <section id="view-ocr" class="view-section hidden space-y-5 animate-slide-up">
             <div class="surface-card p-6 sm:p-8 space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                     <div>
-                        <h2 class="text-xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
-                            <i data-lucide="scan-line" class="w-6 h-6 text-emerald-600"></i>
-                            <span>AI Optical Character Recognition (OCR)</span>
-                        </h2>
-                        <p class="text-xs text-slate-500 mt-1">Ekstraksi teks dari berkas foto, scan kuitansi, berkas KTP, atau buku secara instan di browser.</p>
-                    </div>
-
-                    <div class="flex items-center space-x-3">
-                        <div class="flex items-center space-x-1.5 bg-slate-100 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700">
-                            <i data-lucide="languages" class="w-4 h-4 text-slate-500"></i>
-                            <span>Bahasa:</span>
-                            <select id="ocr-lang-select" class="bg-transparent font-bold focus:outline-none cursor-pointer">
-                                <option value="ind">Bahasa Indonesia (ind)</option>
-                                <option value="eng">English (eng)</option>
-                                <option value="ind+eng">Indonesia + English</option>
-                            </select>
+                        <div class="flex items-center space-x-2.5 mb-1">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                                <i data-lucide="scan-line" class="w-5 h-5"></i>
+                            </div>
+                            <h2 class="text-xl font-extrabold tracking-tight text-slate-900">AI Optical Character Recognition</h2>
                         </div>
-                        <button onclick="startBatchOcr()" id="btn-start-ocr" class="btn-tactile px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center space-x-1.5">
-                            <i data-lucide="play" class="w-4 h-4"></i>
+                        <p class="text-xs text-slate-400 ml-11">Ekstrak teks dari scan, foto KTP, kwitansi, atau buku langsung di browser.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <select id="ocr-lang-select" class="form-select form-input !w-auto !text-[11px] bg-slate-100 border-slate-200">
+                            <option value="ind">🇮🇩 Indonesia</option>
+                            <option value="eng">🇺🇸 English</option>
+                            <option value="ind+eng">Indonesia + English</option>
+                        </select>
+                        <button onclick="startBatchOcr()" class="btn-tactile btn-emerald-glow px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-sm flex items-center space-x-1.5">
+                            <i data-lucide="play" class="w-3.5 h-3.5"></i>
                             <span>Mulai Ekstraksi</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Dropzone -->
-                <div id="ocr-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-2" onclick="triggerGlobalFileUpload()">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-                        <i data-lucide="scan" class="w-6 h-6"></i>
+                <div id="ocr-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-3" onclick="triggerGlobalFileUpload()">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-sm">
+                        <i data-lucide="scan" class="w-7 h-7"></i>
                     </div>
-                    <h4 class="text-sm font-bold text-slate-900">Pilih File PDF Scan atau Foto Dokumen</h4>
-                    <p class="text-xs text-slate-400">Mendukung .PDF, .JPG, .PNG, .WEBP</p>
+                    <div>
+                        <h4 class="text-sm font-extrabold text-slate-900">Pilih File PDF Scan atau Foto Dokumen</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Mendukung PDF, JPG, PNG, WEBP</p>
+                    </div>
                 </div>
 
-                <!-- Progress Bar -->
-                <div id="ocr-full-progress-container" class="hidden space-y-2 bg-emerald-50/70 p-4 rounded-xl border border-emerald-200">
+                <!-- Progress -->
+                <div id="ocr-full-progress-container" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2">
                     <div class="flex justify-between items-center text-xs font-bold text-emerald-800">
                         <span id="ocr-full-status-label" class="flex items-center space-x-2">
                             <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-emerald-600"></i>
-                            <span>Memuat neural OCR model...</span>
+                            <span>Memuat AI OCR engine...</span>
                         </span>
-                        <span id="ocr-full-percentage">0%</span>
+                        <span id="ocr-full-percentage" class="tabular-nums">0%</span>
                     </div>
                     <div class="w-full bg-emerald-200/60 rounded-full h-2 overflow-hidden">
-                        <div id="ocr-full-progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        <div id="ocr-full-progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width:0%"></div>
                     </div>
                 </div>
 
-                <!-- Results Dual Split -->
-                <div id="ocr-results-dual" class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
-                    <!-- Left: Original Image & Bounding Boxes -->
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between text-xs font-bold text-slate-700">
-                            <span>Pratinjau Dokumen (Kotak Deteksi Teks):</span>
-                            <span id="ocr-detected-count" class="text-[11px] font-semibold text-emerald-600">0 Blok Teks</span>
+                <!-- Results Dual Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Preview + Bounding Boxes -->
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-600">
+                            <span>Pratinjau (Kotak Deteksi Teks):</span>
+                            <span id="ocr-detected-count" class="text-emerald-600 font-extrabold">0 Kata</span>
                         </div>
-                        <div id="ocr-preview-container" class="relative bg-slate-100 rounded-xl border border-slate-200 min-h-[400px] max-h-[550px] overflow-auto flex items-center justify-center p-2">
-                            <canvas id="ocr-source-canvas" class="max-w-full shadow-sm rounded"></canvas>
-                            <div id="ocr-boxes-overlay" class="absolute inset-0 pointer-events-none"></div>
+                        <div id="ocr-preview-container" class="relative bg-slate-100 rounded-2xl border border-slate-200 overflow-auto flex items-center justify-center p-2" style="min-height:380px;max-height:520px">
+                            <canvas id="ocr-source-canvas" class="max-w-full shadow-sm rounded-lg"></canvas>
+                            <div id="ocr-boxes-overlay" class="absolute inset-0"></div>
                         </div>
                     </div>
 
-                    <!-- Right: Editable Text Result -->
-                    <div class="flex flex-col space-y-2">
-                        <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                    <!-- Text Result -->
+                    <div class="flex flex-col space-y-2.5">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-600">
                             <span>Teks Hasil Ekstraksi:</span>
                             <div class="flex items-center space-x-1.5">
-                                <button onclick="copyFullOcrText()" class="btn-tactile px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center space-x-1">
-                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                    <span>Salin</span>
+                                <button onclick="copyFullOcrText()" class="btn-tactile px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold flex items-center space-x-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i><span>Salin</span>
                                 </button>
-                                <button onclick="downloadOcrDocx()" class="btn-tactile px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold flex items-center space-x-1">
-                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                    <span>Unduh Word (.doc)</span>
+                                <button onclick="downloadOcrDocx()" class="btn-tactile px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center space-x-1">
+                                    <i data-lucide="file-text" class="w-3 h-3"></i><span>Word (.doc)</span>
                                 </button>
                             </div>
                         </div>
-                        <textarea id="ocr-full-text-result" class="flex-1 w-full p-4 font-mono-ocr text-xs leading-relaxed bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none min-h-[400px]"></textarea>
+                        <textarea id="ocr-full-text-result" class="flex-1 w-full p-4 font-mono-ocr text-[11px] leading-relaxed bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none" style="min-height:380px" placeholder="Hasil teks akan muncul di sini setelah ekstraksi OCR selesai..."></textarea>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ========================================================
-             VIEW 5: MERGE PDF (GABUNG BANYAK FILE)
-             ======================================================== -->
-        <section id="view-merge" class="view-section hidden space-y-6">
+        <!-- ================================================================
+             VIEW 5: MERGE PDF
+             ================================================================ -->
+        <section id="view-merge" class="view-section hidden space-y-5 animate-slide-up">
             <div class="surface-card p-6 sm:p-8 space-y-6">
-                <div>
-                    <h2 class="text-xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
-                        <i data-lucide="layers-2" class="w-6 h-6 text-blue-600"></i>
-                        <span>Gabung Dokumen PDF (Merge)</span>
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-1">Gabungkan 2 atau lebih file PDF ke dalam satu dokumen tunggal secara instan.</p>
+                <div class="border-b border-slate-100 pb-5">
+                    <div class="flex items-center space-x-2.5 mb-1">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 flex items-center justify-center border border-blue-200">
+                            <i data-lucide="layers-2" class="w-5 h-5"></i>
+                        </div>
+                        <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Gabung Dokumen PDF (Merge)</h2>
+                    </div>
+                    <p class="text-xs text-slate-400 ml-11">Gabungkan 2 atau lebih file PDF ke dalam satu dokumen tunggal secara instan.</p>
                 </div>
 
-                <div class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-2" onclick="document.getElementById('merge-file-input').click()">
-                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-                        <i data-lucide="files" class="w-6 h-6"></i>
+                <div class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-3" onclick="document.getElementById('merge-file-input').click()">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 flex items-center justify-center border border-blue-200 shadow-sm">
+                        <i data-lucide="files" class="w-7 h-7"></i>
                     </div>
-                    <h4 class="text-sm font-bold text-slate-900">Pilih Beberapa File PDF Sekaligus</h4>
-                    <p class="text-xs text-slate-400">Klik untuk memilih file dari komputer</p>
+                    <div>
+                        <h4 class="text-sm font-extrabold text-slate-900">Pilih Beberapa File PDF Sekaligus</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Klik atau tarik file ke area ini</p>
+                    </div>
                     <input type="file" id="merge-file-input" accept="application/pdf" multiple class="hidden" onchange="handleMergeFilesSelected(event)">
                 </div>
 
                 <div id="merge-files-list-section" class="space-y-3 hidden">
-                    <div class="flex items-center justify-between text-xs font-bold text-slate-700">
-                        <span>Urutan File yang Akan Digabung:</span>
-                        <button onclick="clearMergeList()" class="text-rose-600 hover:underline">Hapus Semua</button>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-extrabold text-slate-700">Urutan File yang Akan Digabung:</span>
+                        <button onclick="clearMergeList()" class="text-rose-500 hover:text-rose-700 font-bold flex items-center space-x-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <span>Hapus Semua</span>
+                        </button>
                     </div>
                     <div id="merge-files-container" class="space-y-2"></div>
-
                     <div class="pt-4 flex justify-end">
-                        <button onclick="executePdfMerge()" class="btn-tactile px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center space-x-2">
+                        <button onclick="executePdfMerge()" class="btn-tactile px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-2">
                             <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>Gabungkan Sekarang & Unduh</span>
+                            <span>Gabungkan & Unduh</span>
                         </button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ========================================================
-             VIEW 6: SPLIT PDF (PISAH HALAMAN)
-             ======================================================== -->
-        <section id="view-split" class="view-section hidden space-y-6">
+        <!-- ================================================================
+             VIEW 6: SPLIT PDF
+             ================================================================ -->
+        <section id="view-split" class="view-section hidden space-y-5 animate-slide-up">
             <div class="surface-card p-6 sm:p-8 space-y-6">
-                <div>
-                    <h2 class="text-xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
-                        <i data-lucide="scissors" class="w-6 h-6 text-amber-600"></i>
-                        <span>Pisah & Ekstrak Halaman PDF</span>
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-1">Pilih lembar halaman tertentu atau tentukan rentang nomor halaman (contoh: 1-3, 5).</p>
-                </div>
-
-                <div id="split-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-2" onclick="triggerGlobalFileUpload()">
-                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
-                        <i data-lucide="file-minus" class="w-6 h-6"></i>
-                    </div>
-                    <h4 class="text-sm font-bold text-slate-900">Pilih Dokumen PDF untuk Dipisahkan</h4>
-                    <p class="text-xs text-slate-400">Lihat thumbnail setiap halaman dan pilih yang ingin diekstrak</p>
-                </div>
-
-                <div id="split-active-section" class="hidden space-y-4">
-                    <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                        <div class="flex items-center space-x-2 text-xs">
-                            <span class="font-bold text-slate-700">Rentang:</span>
-                            <input type="text" id="split-range-input" placeholder="contoh: 1-3, 5" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 w-44">
-                            <button onclick="applySplitRange()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg text-xs transition">Pilih Rentang</button>
+                <div class="border-b border-slate-100 pb-5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                                <i data-lucide="scissors" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Pisah & Ekstrak Halaman</h2>
+                                <p class="text-xs text-slate-400 mt-0.5">Pilih halaman atau rentang nomor untuk diekstrak (misal: 1-3, 5).</p>
+                            </div>
                         </div>
-                        <div class="flex items-center space-x-2 text-xs">
-                            <button onclick="selectAllSplitPages(true)" class="text-amber-600 font-semibold hover:underline">Pilih Semua</button>
-                            <span class="text-slate-300">|</span>
-                            <button onclick="selectAllSplitPages(false)" class="text-slate-500 font-semibold hover:underline">Hapus Pilihan</button>
-                            <button onclick="executePdfSplit()" class="btn-tactile px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-xs ml-2 flex items-center space-x-1.5">
+                        <button id="split-clear-file-btn" onclick="clearSplitView()" class="hidden btn-close-file">
+                            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                            <span>Hapus File</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="split-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-3" onclick="triggerGlobalFileUpload()">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 flex items-center justify-center border border-amber-200 shadow-sm">
+                        <i data-lucide="file-minus" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-extrabold text-slate-900">Pilih Dokumen PDF untuk Dipisahkan</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Lihat thumbnail setiap halaman dan pilih yang ingin diekstrak</p>
+                    </div>
+                </div>
+
+                <div id="split-active-section" class="hidden space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-amber-800">Rentang Halaman:</span>
+                            <input type="text" id="split-range-input" placeholder="contoh: 1-3, 5" class="form-input !w-40 !text-xs">
+                            <button onclick="applySplitRange()" class="btn-tactile px-3 py-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold rounded-lg text-xs">Terapkan</button>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="selectAllSplitPages(true)" class="text-amber-700 font-bold hover:underline">Pilih Semua</button>
+                            <span class="text-amber-300">|</span>
+                            <button onclick="selectAllSplitPages(false)" class="text-slate-500 font-bold hover:underline">Hapus Pilihan</button>
+                            <button onclick="executePdfSplit()" class="btn-tactile px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-xl shadow-sm flex items-center space-x-1.5">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span>Ekstrak Terpilih</span>
+                                <span>Ekstrak</span>
                             </button>
                         </div>
                     </div>
-
-                    <div id="split-thumbnails-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 pt-2"></div>
+                    <div id="split-thumbnails-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3"></div>
                 </div>
             </div>
         </section>
 
-        <!-- ========================================================
+        <!-- ================================================================
              VIEW 7: CONVERT (PDF <-> IMAGE)
-             ======================================================== -->
-        <section id="view-convert" class="view-section hidden space-y-6">
+             ================================================================ -->
+        <section id="view-convert" class="view-section hidden space-y-5 animate-slide-up">
             <div class="surface-card p-6 sm:p-8 space-y-6">
                 <!-- Sub-Tabs -->
                 <div class="flex border-b border-slate-200 space-x-6 text-sm font-bold">
-                    <button onclick="setConvertTab('pdf-to-img')" id="subtab-pdf-to-img" class="pb-3 border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2">
+                    <button onclick="setConvertTab('pdf-to-img')" id="subtab-pdf-to-img" class="pb-3 border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2 transition">
                         <i data-lucide="image" class="w-4 h-4"></i>
-                        <span>PDF ke Gambar (PNG/JPG)</span>
+                        <span>PDF ke Gambar</span>
                     </button>
-                    <button onclick="setConvertTab('img-to-pdf')" id="subtab-img-to-pdf" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2">
+                    <button onclick="setConvertTab('img-to-pdf')" id="subtab-img-to-pdf" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-700 flex items-center space-x-2 transition">
                         <i data-lucide="file-image" class="w-4 h-4"></i>
                         <span>Foto ke Dokumen PDF</span>
                     </button>
                 </div>
 
-                <!-- PDF to Image -->
-                <div id="convert-panel-pdf-to-img" class="space-y-4">
-                    <!-- Dropzone when no PDF loaded -->
-                    <div id="convert-pdf-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-2" onclick="triggerGlobalFileUpload()">
-                        <div class="w-12 h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center border border-pink-100">
-                            <i data-lucide="file-up" class="w-6 h-6"></i>
+                <!-- PDF to Image Panel -->
+                <div id="convert-panel-pdf-to-img" class="space-y-5">
+                    <!-- Dropzone -->
+                    <div id="convert-pdf-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-3" onclick="triggerGlobalFileUpload()">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-100 to-pink-50 text-pink-600 flex items-center justify-center border border-pink-200 shadow-sm">
+                            <i data-lucide="file-up" class="w-7 h-7"></i>
                         </div>
-                        <h4 class="text-sm font-bold text-slate-900">Pilih File PDF untuk Dikonversi ke Gambar</h4>
-                        <p class="text-xs text-slate-400">Klik untuk memilih file PDF atau tarik dan lepas ke sini</p>
+                        <div>
+                            <h4 class="text-sm font-extrabold text-slate-900">Pilih File PDF untuk Dikonversi ke Gambar</h4>
+                            <p class="text-xs text-slate-400 mt-0.5">Klik atau tarik file ke area ini</p>
+                        </div>
                     </div>
 
-                    <!-- Active PDF Panel with Visual Gallery -->
+                    <!-- Active PDF Panel -->
                     <div id="convert-pdf-active-panel" class="hidden space-y-5">
-                        <!-- File info and Global Actions Bar -->
-                        <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <!-- File Info Bar -->
+                        <div class="file-info-bar">
                             <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-lg bg-pink-100 text-pink-700 flex items-center justify-center">
+                                <div class="w-10 h-10 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center border border-pink-200">
                                     <i data-lucide="file-text" class="w-5 h-5"></i>
                                 </div>
                                 <div>
-                                    <h4 id="convert-pdf-file-name" class="text-xs font-bold text-slate-900 truncate max-w-xs sm:max-w-md">-</h4>
-                                    <p class="text-[11px] text-slate-500">
-                                        <span id="convert-pdf-file-pages">- Halaman</span> • 
+                                    <h4 id="convert-pdf-file-name" class="text-xs font-extrabold text-slate-900 truncate max-w-[200px] sm:max-w-md">-</h4>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">
+                                        <span id="convert-pdf-file-pages">- Halaman</span> &bull;
                                         <span id="convert-pdf-file-size">-</span>
                                     </p>
                                 </div>
                             </div>
-                            
-                            <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-2">
                                 <div class="flex items-center space-x-1.5 text-xs">
                                     <span class="font-bold text-slate-600">Format:</span>
-                                    <select id="convert-img-format" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-white" onchange="renderPdfToImageGrid()">
-                                        <option value="image/png">PNG (Jernih & Tajam)</option>
-                                        <option value="image/jpeg">JPG (Ukuran Ringan)</option>
+                                    <select id="convert-img-format" class="form-select form-input !w-auto !text-[11px]" onchange="renderPdfToImageGrid()">
+                                        <option value="image/png">PNG (Jernih)</option>
+                                        <option value="image/jpeg">JPG (Ringan)</option>
                                     </select>
                                 </div>
-                                <button onclick="triggerGlobalFileUpload()" class="text-xs text-slate-600 hover:text-slate-900 font-semibold underline">Ganti File</button>
-                                <button onclick="executePdfToImages()" id="btn-download-all-images" class="btn-tactile px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center space-x-1.5">
+                                <button onclick="triggerGlobalFileUpload()" class="btn-close-file">
+                                    <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
+                                    <span>Ganti</span>
+                                </button>
+                                <button onclick="clearConvertFile()" class="btn-close-file">
+                                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                    <span>Hapus File</span>
+                                </button>
+                                <button onclick="executePdfToImages()" id="btn-download-all-images" class="btn-tactile btn-pink-glow px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5">
                                     <i data-lucide="archive" class="w-4 h-4"></i>
-                                    <span>Unduh Semua (.ZIP)</span>
+                                    <span>Unduh Semua (ZIP)</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Progress Bar during zip creation -->
-                        <div id="convert-progress-box" class="hidden space-y-2 p-4 rounded-xl bg-pink-50/70 border border-pink-200">
-                            <div class="flex justify-between items-center text-xs font-bold text-pink-900">
+                        <!-- Progress -->
+                        <div id="convert-progress-box" class="hidden p-4 rounded-2xl bg-pink-50 border border-pink-200 space-y-2">
+                            <div class="flex justify-between items-center text-xs font-bold text-pink-800">
                                 <span id="convert-status-label" class="flex items-center space-x-2">
                                     <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-pink-600"></i>
                                     <span>Mengonversi halaman...</span>
                                 </span>
-                                <span id="convert-percent-label">0%</span>
+                                <span id="convert-percent-label" class="tabular-nums">0%</span>
                             </div>
                             <div class="w-full bg-pink-200/60 rounded-full h-2 overflow-hidden">
-                                <div id="convert-progress-bar" class="bg-pink-600 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+                                <div id="convert-progress-bar" class="bg-pink-500 h-2 rounded-full transition-all duration-200" style="width:0%"></div>
                             </div>
                         </div>
 
-                        <!-- Visual Grid of rendered pages -->
+                        <!-- Page Gallery Grid -->
                         <div>
                             <div class="flex items-center justify-between mb-3">
-                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-500">Pratinjau Lembar Halaman (Unduh Satuan / Semua):</h5>
-                                <span id="convert-pages-count-badge" class="text-xs text-pink-600 font-semibold">- Lembar</span>
+                                <h5 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Pratinjau Halaman:</h5>
+                                <span id="convert-pages-count-badge" class="text-xs text-pink-600 font-extrabold">- Lembar</span>
                             </div>
                             <div id="convert-pdf-pages-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Image to PDF -->
-                <div id="convert-panel-img-to-pdf" class="space-y-4 hidden">
-                    <p class="text-xs text-slate-600">Susun kumpulan foto struk, kuitansi, atau berkas JPG/PNG menjadi satu file PDF rapi.</p>
-                    
-                    <div id="img-to-pdf-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-2" onclick="document.getElementById('img-to-pdf-input').click()">
-                        <div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-100">
-                            <i data-lucide="images" class="w-6 h-6"></i>
+                <!-- Image to PDF Panel -->
+                <div id="convert-panel-img-to-pdf" class="space-y-5 hidden">
+                    <p class="text-xs text-slate-500">Susun kumpulan foto kwitansi, struk, atau berkas JPG/PNG menjadi satu PDF rapi.</p>
+
+                    <div id="img-to-pdf-dropzone" class="dropzone-modern p-10 text-center flex flex-col items-center justify-center space-y-3" onclick="document.getElementById('img-to-pdf-input').click()">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-200 shadow-sm">
+                            <i data-lucide="images" class="w-7 h-7"></i>
                         </div>
-                        <h4 class="text-sm font-bold text-slate-900">Pilih Gambar (JPG/PNG) dari Komputer</h4>
-                        <p class="text-xs text-slate-400">Pilih beberapa foto sekaligus atau tarik ke area ini</p>
+                        <div>
+                            <h4 class="text-sm font-extrabold text-slate-900">Pilih Gambar (JPG/PNG)</h4>
+                            <p class="text-xs text-slate-400 mt-0.5">Pilih beberapa foto sekaligus atau tarik ke area ini</p>
+                        </div>
                         <input type="file" id="img-to-pdf-input" accept="image/png,image/jpeg,image/webp" multiple class="hidden" onchange="handleImagesSelected(event)">
                     </div>
 
                     <div id="img-to-pdf-preview-box" class="hidden space-y-4">
-                        <div class="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                            <div class="flex items-center space-x-2">
-                                <span class="font-bold text-slate-700">Gambar Terpilih:</span>
-                                <span id="img-selected-count-badge" class="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 font-bold">0 Foto</span>
+                        <div class="file-info-bar">
+                            <div class="flex items-center space-x-2 text-xs">
+                                <span class="font-extrabold text-slate-700">Gambar Dipilih:</span>
+                                <span id="img-selected-count-badge" class="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 font-extrabold">0 Foto</span>
                             </div>
-                            <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-3 text-xs">
                                 <div class="flex items-center space-x-1.5">
-                                    <span class="font-semibold text-slate-600">Orientasi:</span>
-                                    <select id="img-pdf-orientation" class="border border-slate-300 rounded px-2 py-1 text-xs bg-white font-semibold">
+                                    <span class="font-bold text-slate-600">Orientasi:</span>
+                                    <select id="img-pdf-orientation" class="form-select form-input !w-auto !text-[11px]">
                                         <option value="portrait">Portrait (Tegak)</option>
                                         <option value="landscape">Landscape (Mendatar)</option>
                                     </select>
                                 </div>
-                                <button onclick="clearImgToPdfList()" class="text-rose-600 font-semibold hover:underline">Hapus Semua</button>
+                                <button onclick="document.getElementById('img-to-pdf-input').click()" class="btn-close-file !text-cyan-600 !border-cyan-200 !bg-cyan-50">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                    <span>Tambah Foto</span>
+                                </button>
+                                <button onclick="clearImgToPdfList()" class="btn-close-file">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    <span>Hapus Semua</span>
+                                </button>
                             </div>
                         </div>
-
                         <div id="img-thumbnails-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
-
                         <div class="flex justify-end pt-2">
-                            <button onclick="executeImagesToPdf()" class="btn-tactile px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center space-x-2">
+                            <button onclick="executeImagesToPdf()" class="btn-tactile px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-2">
                                 <i data-lucide="file-check" class="w-4 h-4"></i>
-                                <span>Buat Dokumen PDF & Unduh</span>
+                                <span>Buat & Unduh PDF</span>
                             </button>
                         </div>
                     </div>
@@ -908,84 +999,99 @@
             </div>
         </section>
 
-        <!-- ========================================================
-             VIEW 8: WATERMARK & NOMOR HALAMAN
-             ======================================================== -->
-        <section id="view-watermark" class="view-section hidden space-y-6">
+        <!-- ================================================================
+             VIEW 8: WATERMARK
+             ================================================================ -->
+        <section id="view-watermark" class="view-section hidden space-y-5 animate-slide-up">
             <div class="surface-card p-6 sm:p-8 space-y-6">
-                <div>
-                    <h2 class="text-xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
-                        <i data-lucide="stamp" class="w-6 h-6 text-teal-600"></i>
-                        <span>Watermark & Nomor Halaman Otomatis</span>
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-1">Sematkan stempel hak cipta diagonal dan penomoran halaman otomatis ke seluruh lembar dokumen.</p>
+                <div class="border-b border-slate-100 pb-5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 text-teal-600 flex items-center justify-center border border-teal-200">
+                                <i data-lucide="stamp" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Watermark & Nomor Halaman</h2>
+                                <p class="text-xs text-slate-400 mt-0.5">Sematkan stempel dan penomoran otomatis ke seluruh lembar dokumen.</p>
+                            </div>
+                        </div>
+                        <!-- File status -->
+                        <div id="watermark-file-badge" class="hidden items-center space-x-2">
+                            <span id="watermark-file-name" class="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-xl truncate max-w-[180px]"></span>
+                            <button onclick="clearCurrentFile()" class="btn-close-file">
+                                <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                <span>Hapus</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No File Warning -->
+                <div id="watermark-no-file-msg" class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 font-semibold flex items-center space-x-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500 flex-shrink-0"></i>
+                    <span>Buka file PDF terlebih dahulu dari menu <strong>Buka File</strong> di atas, lalu kembali ke halaman Watermark.</span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Settings -->
                     <div class="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-200 text-xs">
-                        <h4 class="font-bold text-slate-900 text-sm">Pengaturan Watermark</h4>
-                        
+                        <h4 class="font-extrabold text-slate-900 text-sm">Pengaturan Watermark</h4>
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Teks Watermark:</label>
-                            <input type="text" id="wm-text" value="CONFIDENTIAL / DOKUMEN ASLI" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <label class="block font-bold text-slate-700 mb-1.5">Teks Watermark:</label>
+                            <input type="text" id="wm-text" value="CONFIDENTIAL / DOKUMEN ASLI" class="form-input">
                         </div>
-
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Ukuran Font:</label>
-                                <input type="number" id="wm-size" value="48" min="12" max="100" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
+                                <label class="block font-bold text-slate-700 mb-1.5">Ukuran Font:</label>
+                                <input type="number" id="wm-size" value="48" min="12" max="100" class="form-input">
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Transparansi (%):</label>
-                                <input type="number" id="wm-opacity" value="25" min="5" max="90" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
+                                <label class="block font-bold text-slate-700 mb-1.5">Transparansi (%):</label>
+                                <input type="number" id="wm-opacity" value="25" min="5" max="90" class="form-input">
                             </div>
                         </div>
-
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Sudut Kemiringan:</label>
-                                <select id="wm-angle" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
+                                <label class="block font-bold text-slate-700 mb-1.5">Sudut Kemiringan:</label>
+                                <select id="wm-angle" class="form-select form-input">
                                     <option value="45">Diagonal (45°)</option>
                                     <option value="0">Horizontal (0°)</option>
                                     <option value="-45">Diagonal Terbalik (-45°)</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-semibold text-slate-700 mb-1">Warna:</label>
-                                <input type="color" id="wm-color" value="#dc2626" class="w-full h-8 border border-slate-300 rounded-lg cursor-pointer">
+                                <label class="block font-bold text-slate-700 mb-1.5">Warna:</label>
+                                <input type="color" id="wm-color" value="#dc2626" class="w-full h-9 border border-slate-300 rounded-xl cursor-pointer">
                             </div>
                         </div>
-
                         <div class="pt-3 border-t border-slate-200">
                             <label class="flex items-center space-x-2 cursor-pointer">
-                                <input type="checkbox" id="wm-include-page-num" checked class="rounded text-teal-600 focus:ring-teal-500 w-4 h-4">
-                                <span class="font-semibold text-slate-700">Tambahkan Nomor Halaman ("Halaman X dari Y") di bagian bawah</span>
+                                <input type="checkbox" id="wm-include-page-num" checked class="rounded text-teal-600 w-4 h-4">
+                                <span class="font-semibold text-slate-600">Tambahkan nomor halaman ("Halaman X dari Y")</span>
                             </label>
                         </div>
-
-                        <button onclick="executeApplyWatermark()" class="btn-tactile w-full mt-2 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-xs flex items-center justify-center space-x-2">
-                            <i data-lucide="check" class="w-4 h-4"></i>
+                        <button onclick="executeApplyWatermark()" class="btn-tactile w-full mt-2 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-extrabold rounded-2xl shadow-sm flex items-center justify-center space-x-2">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
                             <span>Terapkan & Unduh PDF</span>
                         </button>
                     </div>
 
-                    <!-- Watermark Preview Card -->
-                    <div class="flex flex-col items-center justify-center bg-slate-100 rounded-2xl border border-slate-200 p-4 min-h-[300px]">
-                        <div id="wm-preview-card" class="w-64 h-80 bg-white shadow-sm rounded-xl relative overflow-hidden flex flex-col justify-between p-4 border border-slate-200">
-                            <div class="space-y-2 opacity-25">
-                                <div class="w-3/4 h-2 bg-slate-400 rounded"></div>
-                                <div class="w-full h-2 bg-slate-300 rounded"></div>
-                                <div class="w-5/6 h-2 bg-slate-300 rounded"></div>
-                                <div class="w-4/5 h-2 bg-slate-300 rounded"></div>
+                    <!-- Preview -->
+                    <div class="flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl border border-slate-200 p-6 gap-4">
+                        <div class="wm-preview-doc">
+                            <div class="space-y-1.5 opacity-20">
+                                <div class="w-3/4 h-2 bg-slate-400 rounded-full"></div>
+                                <div class="w-full h-2 bg-slate-300 rounded-full"></div>
+                                <div class="w-5/6 h-2 bg-slate-300 rounded-full"></div>
+                                <div class="w-4/5 h-2 bg-slate-300 rounded-full"></div>
+                                <div class="w-3/4 h-2 bg-slate-300 rounded-full"></div>
                             </div>
-                            <div id="wm-mock-text" class="absolute inset-0 flex items-center justify-center text-rose-600 font-extrabold text-lg select-none pointer-events-none transform rotate-45 opacity-25">
+                            <div id="wm-mock-text" class="absolute inset-0 flex items-center justify-center text-rose-600 font-extrabold text-lg select-none pointer-events-none opacity-25" style="transform:rotate(45deg)">
                                 CONFIDENTIAL
                             </div>
-                            <div class="text-[10px] text-center text-slate-400 font-mono">
-                                Halaman 1 dari 1
-                            </div>
+                            <div class="absolute bottom-3 left-0 right-0 text-center text-[9px] text-slate-400 font-mono">Halaman 1 dari 1</div>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-3 font-medium">Pratinjau letak watermark</p>
+                        <p class="text-[11px] text-slate-400 font-semibold">Pratinjau posisi watermark</p>
                     </div>
                 </div>
             </div>
@@ -994,51 +1100,53 @@
     </main>
 
     <!-- Footer -->
-    <footer class="glass-panel border-t border-slate-200/80 mt-auto py-4 text-center text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div>
-                <span class="font-bold text-slate-800">IdangPDF Studio</span> — Suite Dokumen & AI OCR Mandiri 100% Client-Side.
+    <footer class="glass-panel border-t border-slate-200/80 mt-auto py-4">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px]">
+            <div class="text-slate-600">
+                <span class="font-extrabold text-slate-900">IdangPDF Studio</span> &mdash; Suite Dokumen &amp; AI OCR Mandiri.
             </div>
-            <div class="text-[11px] text-slate-400">
-                Zero Cloud Upload • In-Browser WASM • High Performance
+            <div class="flex items-center space-x-4 text-slate-400 font-semibold">
+                <span class="flex items-center space-x-1"><i data-lucide="shield-check" class="w-3 h-3 text-emerald-500"></i><span>Zero Cloud Upload</span></span>
+                <span class="flex items-center space-x-1"><i data-lucide="cpu" class="w-3 h-3 text-indigo-400"></i><span>In-Browser WASM</span></span>
             </div>
         </div>
     </footer>
 
-    <!-- MODAL: DIGITAL SIGNATURE PAD -->
-    <div id="modal-signature" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                    <i data-lucide="signature" class="w-4 h-4 text-indigo-600"></i>
+    <!-- ================================================================
+         MODALS
+         ================================================================ -->
+
+    <!-- Modal: Digital Signature -->
+    <div id="modal-signature" class="modal-overlay hidden">
+        <div class="modal-card max-w-md w-full p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
+                    <i data-lucide="pen-line" class="w-4 h-4 text-indigo-500"></i>
                     <span>Tanda Tangan / Paraf Digital</span>
                 </h3>
-                <button onclick="closeSignatureModal()" class="text-slate-400 hover:text-slate-600">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button onclick="closeSignatureModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
-
             <p class="text-xs text-slate-500">Gunakan mouse atau layar sentuh untuk membuat tanda tangan:</p>
-            
-            <div class="border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 relative overflow-hidden">
-                <canvas id="signature-canvas" width="400" height="180" class="w-full h-44 cursor-crosshair block"></canvas>
+            <div class="border-2 border-dashed border-slate-300 rounded-2xl bg-gradient-to-br from-slate-50 to-white relative overflow-hidden shadow-inner">
+                <canvas id="signature-canvas" width="400" height="180" class="w-full cursor-crosshair block"></canvas>
             </div>
-
             <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <span class="text-xs font-semibold text-slate-600">Warna:</span>
-                    <button onclick="setSignatureColor('#000000')" class="w-6 h-6 rounded-full bg-black border-2 border-white shadow-xs ring-1 ring-slate-300"></button>
-                    <button onclick="setSignatureColor('#1d4ed8')" class="w-6 h-6 rounded-full bg-blue-700 border-2 border-white shadow-xs ring-1 ring-slate-300"></button>
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs font-bold text-slate-600">Warna:</span>
+                    <button onclick="setSignatureColor('#000000')" class="w-7 h-7 rounded-full bg-black border-2 border-white shadow-sm ring-1 ring-slate-300 hover:scale-110 transition"></button>
+                    <button onclick="setSignatureColor('#1d4ed8')" class="w-7 h-7 rounded-full bg-blue-700 border-2 border-white shadow-sm ring-1 ring-slate-300 hover:scale-110 transition"></button>
+                    <button onclick="setSignatureColor('#dc2626')" class="w-7 h-7 rounded-full bg-red-600 border-2 border-white shadow-sm ring-1 ring-slate-300 hover:scale-110 transition"></button>
                 </div>
-                <button onclick="clearSignatureCanvas()" class="text-xs text-slate-500 hover:text-rose-600 font-semibold flex items-center space-x-1">
+                <button onclick="clearSignatureCanvas()" class="text-xs text-slate-400 hover:text-rose-600 font-bold flex items-center space-x-1 transition">
                     <i data-lucide="eraser" class="w-3.5 h-3.5"></i>
                     <span>Hapus Kanvas</span>
                 </button>
             </div>
-
             <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-                <button onclick="closeSignatureModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Batal</button>
-                <button onclick="applySignatureToDocument()" class="btn-tactile px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition flex items-center space-x-1.5">
+                <button onclick="closeSignatureModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">Batal</button>
+                <button onclick="applySignatureToDocument()" class="btn-tactile btn-primary-glow px-5 py-2 text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center space-x-1.5">
                     <i data-lucide="check" class="w-4 h-4"></i>
                     <span>Tempel ke Dokumen</span>
                 </button>
@@ -1046,82 +1154,78 @@
         </div>
     </div>
 
-    <!-- MODAL: TAMBAH TEKS -->
-    <div id="modal-text" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                    <i data-lucide="type" class="w-4 h-4 text-indigo-600"></i>
+    <!-- Modal: Add Text -->
+    <div id="modal-text" class="modal-overlay hidden">
+        <div class="modal-card max-w-sm w-full p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
+                    <i data-lucide="type" class="w-4 h-4 text-indigo-500"></i>
                     <span>Tambah Teks Baru</span>
                 </h3>
-                <button onclick="closeAddTextModal()" class="text-slate-400 hover:text-slate-600">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button onclick="closeAddTextModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
-
-            <div class="space-y-3 text-xs">
+            <div class="space-y-4 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Isi Teks:</label>
-                    <input type="text" id="modal-text-content" placeholder="Ketik teks di sini..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label class="block font-extrabold text-slate-700 mb-1.5">Isi Teks:</label>
+                    <input type="text" id="modal-text-content" placeholder="Ketik teks di sini..." class="form-input">
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Ukuran Font:</label>
-                        <input type="number" id="modal-text-size" value="16" min="8" max="72" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
+                        <label class="block font-extrabold text-slate-700 mb-1.5">Ukuran Font:</label>
+                        <input type="number" id="modal-text-size" value="16" min="8" max="72" class="form-input">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Warna:</label>
-                        <input type="color" id="modal-text-color" value="#000000" class="w-full h-8 border border-slate-300 rounded-lg cursor-pointer">
+                        <label class="block font-extrabold text-slate-700 mb-1.5">Warna Teks:</label>
+                        <input type="color" id="modal-text-color" value="#000000" class="w-full h-9 border border-slate-300 rounded-xl cursor-pointer">
                     </div>
                 </div>
             </div>
-
             <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-                <button onclick="closeAddTextModal()" class="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Batal</button>
-                <button onclick="applyTextToDocument()" class="btn-tactile px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition">Tempel Teks</button>
+                <button onclick="closeAddTextModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">Batal</button>
+                <button onclick="applyTextToDocument()" class="btn-tactile btn-primary-glow px-5 py-2 text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Tempel Teks</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: PRESET STEMPEL -->
-    <div id="modal-stamp" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                    <i data-lucide="stamp" class="w-4 h-4 text-indigo-600"></i>
+    <!-- Modal: Stamp Preset -->
+    <div id="modal-stamp" class="modal-overlay hidden">
+        <div class="modal-card max-w-sm w-full p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
+                    <i data-lucide="stamp" class="w-4 h-4 text-amber-500"></i>
                     <span>Pilih Preset Stempel</span>
                 </h3>
-                <button onclick="closeStampModal()" class="text-slate-400 hover:text-slate-600">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button onclick="closeStampModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
-
             <div class="grid grid-cols-2 gap-3 text-center">
-                <button onclick="applyStampPreset('approved')" class="p-3 border border-emerald-200 rounded-xl hover:bg-emerald-50 transition flex flex-col items-center justify-center">
-                    <span class="stamp-badge stamp-approved text-xs">APPROVED</span>
-                    <span class="text-[10px] text-slate-500 mt-2 font-medium">Disetujui</span>
+                <button onclick="applyStampPreset('approved')" class="p-4 border border-emerald-200 rounded-2xl hover:bg-emerald-50 transition group flex flex-col items-center justify-center gap-2 hover:border-emerald-400">
+                    <span class="stamp-badge stamp-approved">APPROVED</span>
+                    <span class="text-[10px] text-slate-500 font-bold">Disetujui</span>
                 </button>
-                <button onclick="applyStampPreset('lunas')" class="p-3 border border-blue-200 rounded-xl hover:bg-blue-50 transition flex flex-col items-center justify-center">
-                    <span class="stamp-badge stamp-lunas text-xs">LUNAS</span>
-                    <span class="text-[10px] text-slate-500 mt-2 font-medium">Terbayar</span>
+                <button onclick="applyStampPreset('lunas')" class="p-4 border border-blue-200 rounded-2xl hover:bg-blue-50 transition flex flex-col items-center justify-center gap-2 hover:border-blue-400">
+                    <span class="stamp-badge stamp-lunas">LUNAS</span>
+                    <span class="text-[10px] text-slate-500 font-bold">Terbayar</span>
                 </button>
-                <button onclick="applyStampPreset('confidential')" class="p-3 border border-rose-200 rounded-xl hover:bg-rose-50 transition flex flex-col items-center justify-center">
-                    <span class="stamp-badge stamp-confidential text-xs">CONFIDENTIAL</span>
-                    <span class="text-[10px] text-slate-500 mt-2 font-medium">Rahasia</span>
+                <button onclick="applyStampPreset('confidential')" class="p-4 border border-rose-200 rounded-2xl hover:bg-rose-50 transition flex flex-col items-center justify-center gap-2 hover:border-rose-400">
+                    <span class="stamp-badge stamp-confidential" style="font-size:8px;letter-spacing:0.05em">CONFIDENTIAL</span>
+                    <span class="text-[10px] text-slate-500 font-bold">Rahasia</span>
                 </button>
-                <button onclick="applyStampPreset('draft')" class="p-3 border border-amber-200 rounded-xl hover:bg-amber-50 transition flex flex-col items-center justify-center">
-                    <span class="stamp-badge stamp-draft text-xs">DRAFT</span>
-                    <span class="text-[10px] text-slate-500 mt-2 font-medium">Konsep</span>
+                <button onclick="applyStampPreset('draft')" class="p-4 border border-amber-200 rounded-2xl hover:bg-amber-50 transition flex flex-col items-center justify-center gap-2 hover:border-amber-400">
+                    <span class="stamp-badge stamp-draft">DRAFT</span>
+                    <span class="text-[10px] text-slate-500 font-bold">Konsep</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Notification Toast Container -->
+    <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- Core App Logic -->
+    <!-- App Logic -->
     <script src="app.js"></script>
 </body>
 </html>
