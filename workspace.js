@@ -17,11 +17,14 @@ function setSecurityMode(mode) {
     securityMode = mode;
     for (const value of ['protect','unprotect']) document.getElementById('mode-'+value).classList.toggle('selected',value === mode);
     document.getElementById('password-confirm-field').hidden = mode !== 'protect';
+    document.getElementById('security-password-field').hidden = mode === 'unprotect';
+    document.getElementById('show-password-field').hidden = mode === 'unprotect';
     document.getElementById('password-label').textContent = mode === 'protect' ? 'Password baru (minimal 8 karakter)' : 'Password dokumen';
     document.getElementById('security-run').textContent = mode === 'protect' ? 'Lindungi & unduh PDF' : 'Buka proteksi & unduh PDF';
-    document.getElementById('security-help').textContent = mode === 'protect' ? 'PDF dilindungi dengan enkripsi AES-256. Simpan password Anda; dokumen hanya bisa dibuka dengan password tersebut.' : 'Hapus proteksi menggunakan password dokumen yang Anda ketahui. Untuk PDF dengan pembatasan saja, password boleh dikosongkan. Alat ini tidak memulihkan password yang terlupa.';
+    document.getElementById('security-help').textContent = mode === 'protect' ? 'PDF dilindungi dengan enkripsi AES-256. Simpan password Anda; dokumen hanya bisa dibuka dengan password tersebut.' : 'Langsung buka pembatasan cetak, salin, atau edit tanpa mengisi password. Jika PDF memerlukan password untuk dibuka, kolom password akan muncul karena isi dokumen terenkripsi.';
     document.getElementById('security-status').textContent = '';
     document.getElementById('security-password').value = '';
+    document.getElementById('security-password').autocomplete = mode === 'protect' ? 'new-password' : 'current-password';
     document.getElementById('security-confirm').value = '';
 }
 function setOfficeMode(mode) {
@@ -63,7 +66,15 @@ async function runSecurity() {
             worker.onerror = () => reject(new Error('Mesin keamanan gagal dimuat. Jalankan aplikasi melalui server lokal.'));
             worker.onmessage = ({data}) => {
                 if (data.status) status.textContent = data.status;
-                else if (data.error) reject(new Error(data.error));
+                else if (data.error) {
+                    if (data.needsPassword) {
+                        document.getElementById('security-password-field').hidden = false;
+                        document.getElementById('show-password-field').hidden = false;
+                        document.getElementById('security-password').autocomplete = 'current-password';
+                        document.getElementById('security-password').focus();
+                    }
+                    reject(new Error(data.error));
+                }
                 else resolve(data.bytes);
             };
             worker.postMessage({bytes,password,mode},[bytes]);
@@ -144,6 +155,7 @@ document.addEventListener('DOMContentLoaded',() => {
     for (const name of ['security','office']) document.getElementById(name+'-file').addEventListener('change',event => {
         document.getElementById(name+'-filename').textContent = event.target.files[0]?.name || 'Klik untuk memilih file dari perangkat';
         document.getElementById(name+'-status').textContent = '';
+        if (name === 'security' && !securityBusy) setSecurityMode(securityMode);
     });
     document.getElementById('show-password').addEventListener('change',event => {
         for (const id of ['security-password','security-confirm']) document.getElementById(id).type = event.target.checked ? 'text' : 'password';

@@ -4,7 +4,7 @@
 
 - Dashboard, navigasi responsif, dan halaman alat dengan desain workspace baru.
 - **Protect PDF:** enkripsi AES-256 di browser dengan QPDF WebAssembly; password minimal 8 karakter dan konfirmasi password.
-- **Unprotect PDF:** menghapus enkripsi menggunakan password yang diketahui. PDF dengan pembatasan tanpa password buka dapat diproses dengan kolom password kosong. Tidak memulihkan password terlupa.
+- **Unprotect PDF:** langsung mencoba menghapus pembatasan cetak, salin, atau edit tanpa meminta password. Kolom password hanya muncul jika PDF memakai password untuk membuka dokumen. Tidak memulihkan password terlupa.
 - **PDF ke Word (.docx):** mengekstrak teks menjadi paragraf yang dapat diedit. Gambar, tabel, dan tata letak asli tidak dipertahankan. PDF scan tanpa teks diarahkan ke OCR.
 - **PDF ke PowerPoint (.pptx):** satu halaman sebagai gambar per slide, dengan proporsi dipertahankan. Teks dan objek tidak dapat diedit secara terpisah; ukuran slide mengikuti halaman pertama.
 - Semua fitur baru berjalan di browser tanpa mengunggah dokumen. QPDF berjalan dalam Web Worker agar tampilan tetap responsif. Jalankan melalui HTTP menggunakan `node server.js`, bukan membuka file HTML langsung.
