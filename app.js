@@ -201,6 +201,30 @@ async function loadPdfFile(file) {
         document.getElementById('info-pages').innerText = `${state.totalPages} Halaman`;
         document.getElementById('info-filesize').innerText = formatFileSize(file.size);
 
+        // Sync header file badge
+        const headerBadge = document.getElementById('header-file-badge');
+        const headerFileName = document.getElementById('header-file-name');
+        if (headerBadge) headerBadge.classList.remove('hidden');
+        if (headerFileName) headerFileName.innerText = file.name;
+
+        // Sync editor file info bar
+        const edFileInfo = document.getElementById('editor-file-info');
+        const edFileName = document.getElementById('editor-file-name-label');
+        if (edFileInfo) edFileInfo.classList.remove('hidden');
+        if (edFileName) edFileName.innerText = file.name;
+
+        // Sync watermark file badge
+        const wmBadge = document.getElementById('watermark-file-badge');
+        const wmName = document.getElementById('watermark-file-name');
+        const wmMsg = document.getElementById('watermark-no-file-msg');
+        if (wmBadge) wmBadge.classList.remove('hidden');
+        if (wmName) wmName.innerText = file.name;
+        if (wmMsg) wmMsg.classList.add('hidden');
+
+        // Sync split clear button
+        const splitClearBtn = document.getElementById('split-clear-file-btn');
+        if (splitClearBtn) splitClearBtn.classList.remove('hidden');
+
         // Setup Compress, Split, and Convert views
         setupCompressView();
         setupSplitViewGrid();
@@ -835,7 +859,8 @@ async function runOcrCurrentPage() {
     if (!state.pdfDoc) return showToast('Buka dokumen terlebih dahulu', 'warning');
 
     const canvas = document.getElementById('editor-canvas');
-    const lang = document.getElementById('ocr-lang-select').value || 'ind';
+    const langEl = document.getElementById('editor-ocr-lang-select') || document.getElementById('ocr-lang-select');
+    const lang = (langEl ? langEl.value : null) || 'ind';
 
     const progressBox = document.getElementById('editor-ocr-progress-box');
     const statusText = document.getElementById('editor-ocr-status-text');
@@ -1622,6 +1647,102 @@ async function executeApplyWatermark() {
     } catch (err) {
         console.error('Watermark error:', err);
         showToast('Gagal menambahkan watermark: ' + err.message, 'error');
+    }
+}
+
+// ========================================================
+// FILE MANAGEMENT — HAPUS / CLEAR FILE
+// ========================================================
+function clearCurrentFile() {
+    state.currentFile = null;
+    state.currentFileName = 'dokumen.pdf';
+    state.pdfDoc = null;
+    state.rawPdfBytes = null;
+    state.totalPages = 0;
+    state.currentPageIndex = 1;
+    state.pageRotations = {};
+    state.annotations = {};
+    state.compressedBlob = null;
+    state.compressedFileName = '';
+
+    // Header badge
+    const headerBadge = document.getElementById('header-file-badge');
+    if (headerBadge) headerBadge.classList.add('hidden');
+
+    // Document info panel
+    const infoFn = document.getElementById('info-filename');
+    const infoPg = document.getElementById('info-pages');
+    const infoFs = document.getElementById('info-filesize');
+    if (infoFn) infoFn.innerText = '-';
+    if (infoPg) infoPg.innerText = '-';
+    if (infoFs) infoFs.innerText = '-';
+
+    // Compress view reset
+    const compDrop = document.getElementById('compress-dropzone');
+    const compPanel = document.getElementById('compress-active-panel');
+    if (compDrop) compDrop.classList.remove('hidden');
+    if (compPanel) compPanel.classList.add('hidden');
+
+    // Editor reset
+    const editorEmpty = document.getElementById('editor-empty-state');
+    const editorVP = document.getElementById('editor-viewport');
+    if (editorEmpty) editorEmpty.classList.remove('hidden');
+    if (editorVP) editorVP.classList.add('hidden');
+    const thumbContainer = document.getElementById('editor-thumbnails-container');
+    if (thumbContainer) thumbContainer.innerHTML = '';
+    const edFileInfo = document.getElementById('editor-file-info');
+    if (edFileInfo) edFileInfo.classList.add('hidden');
+    const canvas = document.getElementById('editor-canvas');
+    if (canvas) { const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    const annotLayer = document.getElementById('editor-annotation-layer');
+    if (annotLayer) annotLayer.innerHTML = '';
+
+    // Watermark reset
+    const wmBadge = document.getElementById('watermark-file-badge');
+    const wmMsg = document.getElementById('watermark-no-file-msg');
+    if (wmBadge) wmBadge.classList.add('hidden');
+    if (wmMsg) wmMsg.classList.remove('hidden');
+
+    // Reset split + convert sub-views
+    clearSplitView();
+    clearConvertFile();
+
+    showToast('File ditutup. Sesi dibersihkan.', 'info');
+    switchView('dashboard');
+}
+
+function clearSplitView() {
+    const splitDrop = document.getElementById('split-dropzone');
+    const splitActive = document.getElementById('split-active-section');
+    const splitClearBtn = document.getElementById('split-clear-file-btn');
+    if (splitDrop) splitDrop.classList.remove('hidden');
+    if (splitActive) splitActive.classList.add('hidden');
+    if (splitClearBtn) splitClearBtn.classList.add('hidden');
+    if (state.splitSelectedPages) state.splitSelectedPages.clear();
+}
+
+function clearConvertFile() {
+    const convDrop = document.getElementById('convert-pdf-dropzone');
+    const convPanel = document.getElementById('convert-pdf-active-panel');
+    if (convDrop) convDrop.classList.remove('hidden');
+    if (convPanel) convPanel.classList.add('hidden');
+    const grid = document.getElementById('convert-pdf-pages-grid');
+    if (grid) grid.innerHTML = '';
+}
+
+// Active editor tool selection (for floating dock buttons)
+function setActiveEditorTool(tool) {
+    state.activeTool = tool;
+    document.querySelectorAll('.dock-tool-btn').forEach(btn => btn.classList.remove('active'));
+    const btn = document.getElementById(`tool-${tool}`);
+    if (btn) btn.classList.add('active');
+    // Tool cursor cues
+    const viewport = document.getElementById('editor-viewport');
+    if (viewport) {
+        viewport.style.cursor = tool === 'select' ? 'default'
+            : tool === 'text' ? 'text'
+            : tool === 'signature' ? 'crosshair'
+            : 'default';
     }
 }
 
