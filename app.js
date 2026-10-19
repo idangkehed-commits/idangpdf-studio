@@ -124,6 +124,10 @@ function switchView(viewName) {
 // GLOBAL FILE UPLOADER & PDF LOADER
 // ========================================================
 function triggerGlobalFileUpload() {
+    if (state.currentView === 'security' || state.currentView === 'office') {
+        document.getElementById(state.currentView + '-file').click();
+        return;
+    }
     document.getElementById('global-pdf-input').click();
 }
 

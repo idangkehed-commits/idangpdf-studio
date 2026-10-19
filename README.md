@@ -1,5 +1,18 @@
 # 📄 IdangPDF Studio & AI OCR — Versi Kustom
 
+## Pembaruan v3.0 (19 Oktober 2026)
+
+- Dashboard, navigasi responsif, dan halaman alat dengan desain workspace baru.
+- **Protect PDF:** enkripsi AES-256 di browser dengan QPDF WebAssembly; password minimal 8 karakter dan konfirmasi password.
+- **Unprotect PDF:** menghapus enkripsi menggunakan password yang diketahui. PDF dengan pembatasan tanpa password buka dapat diproses dengan kolom password kosong. Tidak memulihkan password terlupa.
+- **PDF ke Word (.docx):** mengekstrak teks menjadi paragraf yang dapat diedit. Gambar, tabel, dan tata letak asli tidak dipertahankan. PDF scan tanpa teks diarahkan ke OCR.
+- **PDF ke PowerPoint (.pptx):** satu halaman sebagai gambar per slide, dengan proporsi dipertahankan. Teks dan objek tidak dapat diedit secara terpisah; ukuran slide mengikuti halaman pertama.
+- Semua fitur baru berjalan di browser tanpa mengunggah dokumen. QPDF berjalan dalam Web Worker agar tampilan tetap responsif. Jalankan melalui HTTP menggunakan `node server.js`, bukan membuka file HTML langsung.
+
+Pustaka fitur baru disimpan di `assets/lib`: QPDF WASM 0.3.0, docx 9.5.1, dan PptxGenJS 3.12.0. Lisensi disertakan dalam folder tersebut. Fitur lama masih memuat PDF.js, Tailwind, ikon, OCR, dan font dari CDN sehingga memerlukan koneksi internet.
+
+Validasi: protect/unprotect PDF dua halaman, penolakan password salah, ekstraksi teks DOCX, PPTX dua slide, serta tampilan desktop dan ponsel 390 px. Hasil Office diverifikasi sebagai arsip OOXML dengan konten yang sesuai.
+
 Aplikasi PDF Tools, Kompresi Dokumen, dan AI OCR modern yang menggabungkan kemudahan modular ala **iLovePDF** dan kedalaman fitur pengeditan/OCR ala **Wondershare PDFelement**, dengan keunggulan utama: **100% Client-Side Privacy (Data tidak diunggah ke internet/cloud luar)**.
 
 ---

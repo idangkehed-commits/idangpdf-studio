@@ -65,11 +65,11 @@
                 <div>
                     <div class="flex items-center space-x-2">
                         <span class="text-base font-extrabold tracking-tight text-slate-900">IdangPDF</span>
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded-md border border-slate-200">v2.0</span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded-md border border-slate-200">v3.0</span>
                     </div>
                     <div class="flex items-center space-x-1.5 text-[11px] text-slate-500 font-medium">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Client-Side Private Engine</span>
+                        <span>Ruang kerja dokumen pribadi</span>
                     </div>
                 </div>
             </div>
@@ -108,9 +108,9 @@
                     <i data-lucide="stamp" class="w-3.5 h-3.5 text-slate-500"></i>
                     <span>Watermark</span>
                 </button>
-            </nav>
+            <button onclick="switchView('office')" id="nav-office" class="nav-tab px-3 py-1.5 rounded-lg">Word / PPT</button><button onclick="switchView('security')" id="nav-security" class="nav-tab px-3 py-1.5 rounded-lg">Keamanan</button></nav>
 
-            <!-- Quick Action Button -->
+            <div class="mobile-nav"><select aria-label="Pilih alat" onchange="switchView(this.value)"><option value="dashboard">Semua alat</option value="editor">Editor</option><option value="compress">Kompres</option><option value="merge">Gabung</option><option value="split">Pisah</option><option value="convert">Konversi gambar</option><option value="office">Word / PowerPoint</option><option value="security">Protect / Unprotect</option><option value="ocr">OCR</option><option value="watermark">Watermark</option></select></div><!-- Quick Action Button -->
             <div class="flex items-center space-x-2">
                 <button onclick="triggerGlobalFileUpload()" class="btn-tactile px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition">
                     <i data-lucide="plus" class="w-4 h-4 text-slate-300"></i>
@@ -121,7 +121,7 @@
         </div>
     </header>
 
-    <!-- Main Workspace Container -->
+    <div class="workspace-heading"><div><span class="eyebrow">IDANGPDF STUDIO</span><p>Dokumen rapi. Pekerjaan selesai.</p></div><span class="privacy-badge"><i data-lucide="shield-check"></i> File diproses di perangkat Anda</span></div><!-- Main Workspace Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
 
         <!-- ========================================================
@@ -135,13 +135,13 @@
                     <div class="space-y-3 relative z-10">
                         <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 text-slate-200 border border-white/10">
                             <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                            <span>Pemrosesan Lokal di Browser • Tanpa Batasan Kuota</span>
+                            <span>WORKSPACE / DOKUMEN</span>
                         </div>
                         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-snug">
-                            Kelola, Edit, dan Ekstrak Teks PDF dengan Standar Profesional.
+                            Ruang kerja yang lebih baik untuk setiap PDF.
                         </h1>
                         <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-xl">
-                            Semua dokumen diproses langsung di memori perangkat Anda. Bebas kompresi berkas, anotasi, ekstraksi OCR Bahasa Indonesia & Inggris, serta penggabungan tanpa risiko privasi.
+                            Edit, konversi, dan lindungi dokumen dalam satu tempat. Alat yang Anda butuhkan untuk menuntaskan pekerjaan, dengan file tetap di perangkat Anda.
                         </p>
                     </div>
 
@@ -188,11 +188,11 @@
                         <i data-lucide="grid" class="w-4 h-4"></i>
                         <span>Koleksi Alat Dokumen</span>
                     </h2>
-                    <span class="text-xs text-slate-400">8 Alat Terpadu</span>
+                    <span class="text-xs text-slate-400">12 alat untuk pekerjaan Anda</span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Tool 1: Studio Editor -->
+                    <button onclick="switchView('security'); setSecurityMode('protect')" class="bento-card extra-tool"><span class="tool-icon protect"><i data-lucide="lock-keyhole"></i></span><h3>Protect PDF</h3><p>Lindungi dokumen dengan enkripsi AES-256 dan password.</p><span class="tool-link">Atur password<i data-lucide="arrow-up-right"></i></span></button><button onclick="switchView('security'); setSecurityMode('unprotect')" class="bento-card extra-tool"><span class="tool-icon unprotect"><i data-lucide="lock-keyhole-open"></i></span><h3>Unprotect PDF</h3><p>Hapus password PDF menggunakan password yang Anda ketahui.</p><span class="tool-link">Buka proteksi<i data-lucide="arrow-up-right"></i></span></button><button onclick="switchView('office'); setOfficeMode('word')" class="bento-card extra-tool"><span class="tool-icon word"><i data-lucide="file-text"></i></span><h3>PDF ke Word</h3><p>Ekstrak teks PDF menjadi dokumen Word yang dapat diedit.</p><span class="tool-link">Ekspor .docx<i data-lucide="arrow-up-right"></i></span></button><button onclick="switchView('office'); setOfficeMode('ppt')" class="bento-card extra-tool"><span class="tool-icon ppt"><i data-lucide="presentation"></i></span><h3>PDF ke PowerPoint</h3><p>Pertahankan tampilan setiap halaman dalam slide presentasi.</p><span class="tool-link">Ekspor .pptx<i data-lucide="arrow-up-right"></i></span></button><!-- Tool 1: Studio Editor -->
                     <div onclick="switchView('editor')" class="bento-card group flex flex-col justify-between">
                         <div class="space-y-3">
                             <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition">
@@ -783,7 +783,7 @@
              ======================================================== -->
         <section id="view-convert" class="view-section hidden space-y-6">
             <div class="surface-card p-6 sm:p-8 space-y-6">
-                <!-- Sub-Tabs -->
+                <div class="convert-shortcuts"><span>Konversi dokumen Office</span><button onclick="switchView('office');setOfficeMode('word')">PDF → Word</button><button onclick="switchView('office');setOfficeMode('ppt')">PDF → PowerPoint</button></div><!-- Sub-Tabs -->
                 <div class="flex border-b border-slate-200 space-x-6 text-sm font-bold">
                     <button onclick="setConvertTab('pdf-to-img')" id="subtab-pdf-to-img" class="pb-3 border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2">
                         <i data-lucide="image" class="w-4 h-4"></i>
@@ -991,7 +991,25 @@
             </div>
         </section>
 
-    </main>
+    
+<section id="view-security" class="view-section hidden space-y-6">
+ <div class="tool-page-heading"><span class="eyebrow">KEAMANAN DOKUMEN</span><h1>Lindungi akses ke PDF Anda.</h1><p>Password diproses di perangkat Anda dan tidak dikirim ke server.</p></div>
+ <div class="workflow-grid"><div class="workflow-card"><div class="segmented"><button id="mode-protect" onclick="setSecurityMode('protect')">Protect PDF</button><button id="mode-unprotect" onclick="setSecurityMode('unprotect')">Unprotect PDF</button></div>
+ <label class="file-picker" for="security-file"><i data-lucide="file-lock-2"></i><strong>Pilih dokumen PDF</strong><span id="security-filename">Klik untuk memilih file dari perangkat</span><input id="security-file" type="file" accept="application/pdf,.pdf"></label>
+ <label class="field-label" for="security-password" id="password-label">Password baru</label><input class="text-field" id="security-password" type="password" autocomplete="new-password" placeholder="Masukkan password" maxlength="127">
+ <div id="password-confirm-field"><label class="field-label" for="security-confirm">Konfirmasi password</label><input class="text-field" id="security-confirm" type="password" autocomplete="new-password" placeholder="Ulangi password" maxlength="127"></div>
+ <label class="check-label"><input type="checkbox" id="show-password"> Tampilkan password</label>
+ <button class="primary-action" id="security-run" onclick="runSecurity()">Lindungi & unduh PDF</button><p id="security-status" class="operation-status" role="status" aria-live="polite"></p></div>
+ <aside class="workflow-aside"><span class="tool-icon protect"><i data-lucide="shield-check"></i></span><h2>Kontrol ada di tangan Anda.</h2><p id="security-help">PDF dilindungi dengan enkripsi AES-256. Simpan password Anda; dokumen hanya bisa dibuka dengan password tersebut.</p><div class="note">Dokumen asli tetap tersedia. Hasil diproses sebagai file baru untuk diunduh.</div></aside></div>
+</section>
+<section id="view-office" class="view-section hidden space-y-6">
+ <div class="tool-page-heading"><span class="eyebrow">KONVERSI DOKUMEN</span><h1>Dari PDF ke langkah berikutnya.</h1><p>Siapkan teks untuk diedit atau halaman untuk dipresentasikan.</p></div>
+ <div class="workflow-grid"><div class="workflow-card"><div class="segmented"><button id="mode-word" onclick="setOfficeMode('word')">Word .docx</button><button id="mode-ppt" onclick="setOfficeMode('ppt')">PowerPoint .pptx</button></div>
+ <label class="file-picker" for="office-file"><i data-lucide="file-up"></i><strong>Pilih PDF untuk dikonversi</strong><span id="office-filename">Klik untuk memilih file dari perangkat</span><input id="office-file" type="file" accept="application/pdf,.pdf"></label>
+ <p class="note" id="office-help">Word mengekstrak teks yang bisa diedit. Tata letak, gambar, dan tabel tidak dipertahankan. PDF hasil scan perlu diproses di alat OCR terlebih dahulu.</p>
+ <button class="primary-action" id="office-run" onclick="runOffice()">Konversi & unduh Word</button><p class="operation-status" id="office-status" role="status" aria-live="polite"></p></div>
+ <aside class="workflow-aside"><span class="tool-icon word"><i data-lucide="files"></i></span><h2>Format tepat untuk pekerjaan Anda.</h2><p>Word untuk melanjutkan penulisan. PowerPoint untuk menampilkan halaman dengan tampilan yang tetap konsisten.</p><div class="note">Untuk PDF dengan password, gunakan Unprotect terlebih dahulu.</div></aside></div>
+</section></main>
 
     <!-- Footer -->
     <footer class="glass-panel border-t border-slate-200/80 mt-auto py-4 text-center text-xs text-slate-500">
@@ -1122,6 +1140,6 @@
     <div id="toast-container"></div>
 
     <!-- Core App Logic -->
-    <script src="app.js"></script>
+    <script src="app.js"></script><script src="workspace.js"></script>
 </body>
 </html>
